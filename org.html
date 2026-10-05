@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>税镜 · 工作台</title>
+<style>
+  :root{--bg:#0f1419;--card:#1a2330;--line:#2a3645;--txt:#e6edf3;--sub:#8b98a5;--red:#e5484d;--grn:#3fb950;--blu:#388bfd;--ylw:#d29922;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px;}
+  h1{font-size:20px;margin-bottom:4px;}
+  .sub{color:var(--sub);font-size:13px;margin-bottom:18px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;}
+  .card h2{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .badge{font-size:12px;padding:2px 8px;border-radius:20px;font-weight:600;}
+  .b-on{background:rgba(63,185,80,.15);color:var(--grn);}
+  .b-off{background:rgba(229,72,77,.15);color:var(--red);}
+  .b-wait{background:rgba(210,153,34,.15);color:var(--ylw);}
+  .b-bl{background:rgba(56,139,253,.15);color:var(--blu);}
+  button{background:var(--blu);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;}
+  button:hover{opacity:.9;} button:disabled{opacity:.5;cursor:not-allowed;}
+  button.mini{background:var(--grn);padding:4px 10px;font-size:12px;}
+  button.ghost{background:#0d1117;border:1px solid var(--line);}
+  button.danger{background:var(--red);}
+  input,textarea{width:100%;background:#0d1117;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:13px;margin-bottom:8px;}
+  label{font-size:12px;color:var(--sub);display:block;margin-bottom:4px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .row>*{flex:1;min-width:130px;}
+  .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .tab{padding:8px 16px;border-radius:8px;background:#0d1117;border:1px solid var(--line);cursor:pointer;font-size:14px;}
+  .tab.active{background:var(--blu);border-color:var(--blu);color:#fff;}
+  .item{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:#0d1117;}
+  .item .t{font-size:14px;font-weight:600;margin-bottom:4px;}
+  .item .m{font-size:12px;color:var(--sub);margin-bottom:6px;}
+  .item .c{font-size:13px;color:#c9d4e0;white-space:pre-wrap;}
+  .pill{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;background:#0d1117;border:1px solid var(--line);color:var(--sub);margin-right:6px;}
+  .res{margin-top:10px;padding:10px 12px;border-radius:8px;background:#0d1117;border:1px solid var(--line);font-size:13px;white-space:pre-wrap;}
+  .ok{color:var(--grn);} .err{color:var(--red);}
+  .meta{font-size:12px;color:var(--sub);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:820px){.grid{grid-template-columns:1fr;}}
+  a{color:var(--blu);}
+  .hide{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>税镜 <span class="meta" style="font-weight:400;">· 财税AI工作台</span></h1>
+  <div class="sub">慧根堂出品 ｜ 个人与机构同一平台 · 专业问答 / 机构口径 / 客户与团队 —— 平台不碰资金</div>
+
+  <!-- 登录 -->
+  <div id="loginView" class="card">
+    <h2>登录</h2>
+    <p class="meta" style="margin-bottom:12px;">同一平台、按身份显隐模块：<b>个人用户</b>只看到问答/政策/积分；<b>机构成员</b>额外看到客户档案、机构口径库、团队问答；<b>机构负责人</b>还能管席位与成员。</p>
+    <div class="row">
+      <div><label>机构码</label><input id="lgCode" value="ORGDEMO"></div>
+      <div><label>登录名</label><input id="lgLogin" value="owner"></div>
+      <div><label>口令</label><input id="lgPwd" type="password" value="demo1234"></div>
+    </div>
+    <button onclick="doLogin()">登录</button>
+    <div id="lgRes" class="res hide"></div>
+    <p class="meta" style="margin-top:10px;">演示机构账号：机构码 <b>ORGDEMO</b> / 登录名 <b>owner</b> / 口令 <b>demo1234</b>（由平台运营在后台开户后下发）<br>个人用户当前请用小程序端（免登录）；Web 端个人登录（手机号）将在账号体系统一后并入本入口。</p>
+  </div>
+
+  <!-- 工作台 -->
+  <div id="appView" class="hide">
+    <div class="card">
+      <h2><span id="orgName">—</span> <span id="orgBadge" class="badge b-bl">—</span></h2>
+      <div class="meta" id="orgMeta">—</div>
+      <div style="margin-top:10px;"><button class="ghost" onclick="doLogout()">退出登录</button></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="home" onclick="switchTab('home')">概览</div>
+      <div class="tab" data-tab="clients" onclick="switchTab('clients')">客户档案</div>
+      <div class="tab" data-tab="answers" onclick="switchTab('answers')">机构口径库</div>
+      <div class="tab" data-tab="ask" onclick="switchTab('ask')">团队问答</div>
+      <div class="tab" data-tab="risk" onclick="switchTab('risk')">风险扫描</div>
+      <div class="tab" data-tab="members" onclick="switchTab('members')">席位成员</div>
+      <div class="tab" data-tab="tasks" onclick="switchTab('tasks')">作业任务</div>
+    </div>
+
+    <!-- 概览 -->
+    <div id="tab-home" class="tabpane">
+      <div class="card"><h2>机构状态</h2><div id="homeBox" class="meta">加载中…</div></div>
+    </div>
+
+    <!-- 客户 -->
+    <div id="tab-clients" class="tabpane hide">
+      <div class="grid">
+        <div class="card">
+          <h2>新增 / 编辑客户</h2>
+          <input type="hidden" id="clId">
+          <label>客户名称</label><input id="clName" placeholder="如 昆山某某建材有限公司">
+          <label>统一社会信用代码</label><input id="clCredit">
+          <div class="row">
+            <div><label>行业</label><input id="clIndustry" placeholder="建筑/餐饮/贸易"></div>
+            <div><label>地区</label><input id="clRegion" placeholder="昆山/苏州"></div>
+          </div>
+          <label>纳税人类型</label><input id="clType" placeholder="小规模纳税人/一般纳税人">
+          <button onclick="saveClient()">保存客户</button>
+          <button class="ghost" onclick="resetClient()">清空</button>
+          <div id="clRes" class="res hide"></div>
+        </div>
+        <div class="card">
+          <h2>客户列表 <span id="clCount" class="badge b-bl">—</span></h2>
+          <div id="clientList" class="meta">加载中…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 口径库 -->
+    <div id="tab-answers" class="tabpane hide">
+      <div class="card">
+        <h2>新增标准口径（整齐划一的核心）</h2>
+        <p class="meta" style="margin-bottom:10px;">把共性/程序性问题（注销、转股、核名…）写成标准答案，成员提问命中即返回统一口径；草稿经负责人审定后生效。</p>
+        <input type="hidden" id="anId">
+        <div class="row">
+          <div><label>分类</label><input id="anCat" placeholder="注销/股权/发票"></div>
+          <div><label>命中关键词（逗号分隔）</label><input id="anPat" placeholder="注销,清税,流程"></div>
+        </div>
+        <label>标准答案</label><textarea id="anMd" rows="3" placeholder="结清税款…取得清税文书后再办理工商注销。"></textarea>
+        <div class="row">
+          <div><label>政策依据（逗号分隔）</label><input id="anRefs" placeholder="税总发〔2018〕149号"></div>
+          <div><label>办理步骤</label><input id="anSteps" placeholder="①结清 ②缴销 ③清税证明 ④工商注销"></div>
+        </div>
+        <button onclick="saveAnswer('draft')">存为草稿</button>
+        <button class="mini" onclick="saveAnswer('active')">保存并生效</button>
+        <button class="ghost" onclick="resetAnswer()">清空</button>
+        <div id="anRes" class="res hide"></div>
+      </div>
+      <div class="card">
+        <h2>口径库 <span id="anCount" class="badge b-on">—</span></h2>
+        <div id="answerList" class="meta">加载中…</div>
+      </div>
+      <div class="card">
+        <h2>沉淀社区精华（个人↔机构闭环）</h2>
+        <p class="meta" style="margin-bottom:10px;">把同行问里<b>高赞/已采纳</b>的实战回答，一键复制为本机构的「标准口径」草稿；负责人审定后生效，成为机构可复核的资产。源内容来自公开社区，不触达个人提问隐私。</p>
+        <div class="row">
+          <input id="cmQ" placeholder="搜关键词，如：红字发票、注销、个税" style="flex:1;background:#0d1117;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;">
+          <button onclick="searchCommunity()">搜社区精华</button>
+        </div>
+        <div id="cmRes" class="meta" style="margin-top:10px;">输入关键词后点搜索。</div>
+      </div>
+    </div>
+
+    <!-- 问答 -->
+    <div id="tab-ask" class="tabpane hide">
+      <div class="card">
+        <h2>团队问答（命中机构口径即锁定）</h2>
+        <label>提问</label><textarea id="askQ" rows="2" placeholder="如：公司注销要走什么流程？"></textarea>
+        <button onclick="doAsk()">提问</button>
+        <div id="askRes" class="res hide"></div>
+      </div>
+    </div>
+
+    <!-- 成员 -->
+    <div id="tab-members" class="tabpane hide">
+      <div class="grid">
+        <div class="card">
+          <h2>加人（占席位）</h2>
+          <div class="row">
+            <div><label>登录名</label><input id="mbLogin" placeholder="acc001"></div>
+            <div><label>姓名</label><input id="mbName" placeholder="小李会计"></div>
+          </div>
+          <label>角色</label>
+          <select id="mbRole" style="width:100%;background:#0d1117;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;margin-bottom:8px;">
+            <option value="member">member（普通成员）</option>
+            <option value="admin">admin（管理员）</option>
+          </select>
+          <button onclick="inviteMember()">生成账号</button>
+          <div id="mbRes" class="res hide"></div>
+        </div>
+        <div class="card">
+          <h2>成员 <span id="mbCount" class="badge b-bl">—</span></h2>
+          <div id="memberList" class="meta">加载中…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 风险扫描 -->
+    <div id="tab-risk" class="tabpane hide">
+      <div class="card">
+        <h2>风险初筛（手工填报 → 批量体检）</h2>
+        <p class="meta" style="margin-bottom:10px;">对每户按一组<b>风险指标</b>批量初筛，只列「<b>命中项 + 依据</b>」，<b>不下结论</b>；须人工复核。数据不足会明确标注。</p>
+        <div class="row">
+          <div><label>选择客户</label>
+            <select id="rkClient" style="width:100%;background:#0d1117;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;margin-bottom:8px;"></select>
+          </div>
+          <div><label>期间</label><input id="rkPeriod" value="2026Q2"></div>
+        </div>
+        <div id="rkMetrics" class="row" style="margin-bottom:8px;"></div>
+        <button onclick="saveRiskInput()">保存填报</button>
+        <button class="mini" onclick="scanRisk()">单户扫描</button>
+        <button class="ghost" onclick="batchRisk()">批量扫描全部客户</button>
+        <div id="rkRes" class="res hide"></div>
+      </div>
+      <div class="card">
+        <h2>初筛报告 <span id="rpCount" class="badge b-bl">—</span></h2>
+        <div id="reportList" class="meta">加载中…</div>
+      </div>
+    </div>
+
+    <!-- 作业任务 -->
+    <div id="tab-tasks" class="tabpane hide">
+      <div class="grid">
+        <div class="card">
+          <h2>下派任务（工作流锁定）</h2>
+          <p class="meta" style="margin-bottom:10px;">把申报/风控/工商等日常作业下派给成员，关联客户与截止日；成员在「只看我执行」中流转状态。机构日常作业流固化进系统，机构才离不开。</p>
+          <label>任务标题</label><input id="tkTitle" placeholder="如 9月增值税申报 + 进项勾选认证">
+          <div class="row">
+            <div><label>场景</label>
+              <select id="tkScene" style="width:100%;background:#0d1117;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;margin-bottom:8px;">
+                <option value="申报">申报</option>
+                <option value="风控">风控</option>
+                <option value="工商">工商</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+            <div><label>执行成员</label><select id="tkAssignee" style="width:100%;background:#0d1117;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;margin-bottom:8px;"></select></div>
+          </div>
+          <div class="row">
+            <div><label>截止日</label><input id="tkDue" type="date" style="background:#0d1117;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;"></div>
+            <div><label>关联客户</label><select id="tkClient" style="width:100%;background:#0d1117;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;margin-bottom:8px;"></select></div>
+          </div>
+          <label>备注 / 执行说明</label><textarea id="tkNote" rows="2" placeholder="如 优先核对进项发票勾选、注意差额征税扣除凭证"></textarea>
+          <button onclick="createTask()">下派任务</button>
+          <div id="tkRes" class="res hide"></div>
+        </div>
+        <div class="card">
+          <h2>任务看板 <span id="tkCount" class="badge b-bl">—</span></h2>
+          <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;"><input type="checkbox" id="tkMine" onchange="loadTasks()" style="width:auto;margin:0;"> 只看我执行的任务</label>
+          <div id="taskList" class="meta">加载中…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API="";
+let TOKEN=localStorage.getItem("org_token")||"";
+let ORG=null;
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function hdr(extra){return Object.assign({"Content-Type":"application/json","X-Org-Token":TOKEN},extra||{});}
+function jwtGet(p){return fetch(API+p,{headers:hdr()}).then(r=>r.json());}
+function jwtPost(p,b){return fetch(API+p,{method:"POST",headers:hdr(),body:JSON.stringify(b||{})}).then(r=>r.json());}
+
+async function doLogin(){
+  const res=document.getElementById("lgRes");res.classList.remove("hide");res.className="res";res.textContent="登录中…";
+  const d=await fetch(API+"/api/org/login",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({org_code:document.getElementById("lgCode").value.trim(),login:document.getElementById("lgLogin").value.trim(),password:document.getElementById("lgPwd").value})}).then(r=>r.json());
+  if(d.ok){TOKEN=d.token;ORG=d.org;localStorage.setItem("org_token",TOKEN);showApp();}
+  else{res.innerHTML="<span class='err'>登录失败："+esc(d.msg||JSON.stringify(d))+"</span>";}
+}
+function doLogout(){TOKEN="";ORG=null;localStorage.removeItem("org_token");document.getElementById("appView").classList.add("hide");document.getElementById("loginView").classList.remove("hide");}
+
+async function showApp(){
+  document.getElementById("loginView").classList.add("hide");
+  document.getElementById("appView").classList.remove("hide");
+  await loadMe();loadHome();loadClients();loadAnswers();loadMembers();loadTasks();
+}
+
+async function loadMe(){
+  const d=await jwtGet("/api/org/me");
+  if(!d.ok){doLogout();return;}
+  ORG=d.org;document.getElementById("orgName").textContent=d.org.name||"";
+  document.getElementById("orgBadge").textContent=(d.org.plan||"trial")+" · "+(d.role||"");
+  document.getElementById("orgMeta").textContent=`机构码 ${d.org.org_code} ｜ 席位 ${d.seat_used}/${d.org.seat_total} ｜ 客户 ${d.client_count} ｜ 生效口径 ${d.answer_count}`;
+}
+function loadHome(){
+  if(!ORG)return;
+  document.getElementById("homeBox").innerHTML=
+    `<b>机构码：</b>${esc(ORG.org_code)}<br><b>套餐：</b>${esc(ORG.plan||'trial')} ｜ <b>状态：</b>${esc(ORG.status||'active')}<br><br>
+     <span class="meta">机构版理念：把共性/程序性问题沉淀为「机构标准口径」，成员提问命中即返回统一答案——新人也不会答得不一样。</span>`;
+}
+
+async function loadClients(){
+  const box=document.getElementById("clientList");
+  const d=await jwtGet("/api/org/clients");
+  if(!d.ok){box.innerHTML="<span class='err'>"+esc(d.msg)+"</span>";return;}
+  const cs=d.clients||[];document.getElementById("clCount").textContent="共 "+cs.length;
+  if(!cs.length){box.textContent="暂无客户，右侧新增。";return;}
+  box.innerHTML=cs.map(c=>`<div class="item"><div class="t">${esc(c.name)}</div>
+    <div class="m"><span class="pill">${esc(c.taxpayer_type||'-')}</span><span class="pill">${esc(c.industry||'-')}</span><span class="pill">${esc(c.region||'-')}</span><span class="pill">${esc(c.credit_no||'')}</span></div>
+    <button class="mini ghost" onclick='editClient(${JSON.stringify(c)})'>编辑</button>
+    <button class="mini danger" onclick="delClient(${c.id})">删除</button></div>`).join("");
+}
+function editClient(c){document.getElementById("clId").value=c.id;document.getElementById("clName").value=c.name;document.getElementById("clCredit").value=c.credit_no||"";document.getElementById("clIndustry").value=c.industry||"";document.getElementById("clRegion").value=c.region||"";document.getElementById("clType").value=c.taxpayer_type||"";}
+function resetClient(){["clId","clName","clCredit","clIndustry","clRegion","clType"].forEach(i=>document.getElementById(i).value="");}
+async function saveClient(){
+  const b={id:document.getElementById("clId").value||null,name:document.getElementById("clName").value,credit_no:document.getElementById("clCredit").value,industry:document.getElementById("clIndustry").value,region:document.getElementById("clRegion").value,taxpayer_type:document.getElementById("clType").value};
+  const r=document.getElementById("clRes");r.classList.remove("hide");
+  const d=await jwtPost("/api/org/client/save",b);
+  r.innerHTML=d.ok?"<span class='ok'>✓ 已保存</span>":"<span class='err'>失败：请填客户名称</span>";
+  if(d.ok){resetClient();loadClients();loadMe();}
+}
+async function delClient(id){if(!confirm("确认删除该客户？"))return;await jwtPost("/api/org/client/delete",{id});loadClients();loadMe();}
+
+// ===== 作业任务分派 =====
+function fillTaskSelects(members,clients){
+  const a=document.getElementById("tkAssignee"),c=document.getElementById("tkClient");
+  if(a.options.length<=1){
+    a.innerHTML='<option value="">选择成员</option>'+members.map(m=>`<option value="${m.id}">${esc(m.name||m.login_name)}（${esc(m.role)}）</option>`).join("");
+  }
+  if(c.options.length<=1){
+    c.innerHTML='<option value="">不关联</option>'+clients.map(cl=>`<option value="${cl.id}">${esc(cl.name)}</option>`).join("");
+  }
+}
+async function loadTasks(){
+  const box=document.getElementById("taskList");
+  if(!box)return;
+  const mine=document.getElementById("tkMine").checked?1:0;
+  const d=await jwtGet("/api/org/tasks?mine="+mine);
+  if(!d.ok){box.innerHTML="<span class='err'>"+esc(d.msg)+"</span>";return;}
+  fillTaskSelects(d.members||[],d.clients||[]);
+  const ts=d.tasks||[];document.getElementById("tkCount").textContent="共 "+ts.length;
+  if(!ts.length){box.textContent="暂无任务，左侧下派。";return;}
+  const stMap={todo:["待办","b-off"],doing:["进行中","b-wait"],done:["已完成","b-on"]};
+  box.innerHTML=ts.map(t=>{
+    const st=stMap[t.status]||stMap.todo;
+    const dl=t.days_left==null?"无截止":(t.days_left===0?"今天":("剩"+t.days_left+"天"));
+    const od=t.overdue?" <span class='err'>· 已逾期</span>":"";
+    return `<div class="item"><div class="t">${esc(t.title)}</div>
+      <div class="m"><span class="pill">${esc(t.scene_tag)}</span><span class="pill">执行：${esc(t.assignee_name||'-')}</span>${t.client_name?`<span class="pill">客户：${esc(t.client_name)}</span>`:''}<span class="pill">${esc(t.due_date||'')} ${dl}</span>${od}</div>
+      <div class="row" style="align-items:center;">
+        <span class="badge ${st[1]}">${st[0]}</span>
+        <select onchange="updateTask(${t.id},this.value)" style="width:auto;background:#0d1117;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:4px 8px;">
+          <option value="todo" ${t.status==='todo'?'selected':''}>待办</option>
+          <option value="doing" ${t.status==='doing'?'selected':''}>进行中</option>
+          <option value="done" ${t.status==='done'?'selected':''}>已完成</option>
+        </select>
+      </div>
+      ${t.note?`<div class="c">${esc(t.note)}</div>`:''}</div>`;
+  }).join("");
+}
+async function createTask(){
+  const b={title:document.getElementById("tkTitle").value.trim(),
+    scene_tag:document.getElementById("tkScene").value,
+    assignee_member_id:document.getElementById("tkAssignee").value||null,
+    due_date:document.getElementById("tkDue").value||null,
+    related_client_id:document.getElementById("tkClient").value||null,
+    note:document.getElementById("tkNote").value};
+  const r=document.getElementById("tkRes");r.classList.remove("hide");
+  if(!b.title||!b.assignee_member_id){r.innerHTML="<span class='err'>请填任务标题并选择执行成员</span>";return;}
+  const d=await jwtPost("/api/org/task/create",b);
+  if(d.ok){r.innerHTML="<span class='ok'>✓ 已下派</span>";document.getElementById("tkTitle").value="";document.getElementById("tkNote").value="";loadTasks();}
+  else r.innerHTML="<span class='err'>失败："+esc(d.msg)+"</span>";
+}
+async function updateTask(id,status){
+  await jwtPost("/api/org/task/update",{id,status});
+  loadTasks();
+}
+
+async function loadAnswers(){
+  const box=document.getElementById("answerList");
+  const d=await jwtGet("/api/org/answers");
+  if(!d.ok){box.innerHTML="<span class='err'>"+esc(d.msg)+"</span>";return;}
+  const as=d.answers||[];document.getElementById("anCount").textContent="共 "+as.length;
+  if(!as.length){box.textContent="暂无口径，先新增。";return;}
+  box.innerHTML=as.map(a=>{
+    let srcBadge="";
+    try{const m=typeof a.meta==='string'?JSON.parse(a.meta||'{}'):(a.meta||{});if(m&&m.source==='community'){srcBadge="<span class='pill' style='color:var(--ylw)'>社区沉淀</span>";}}catch(e){}
+    return `<div class="item">
+    <div class="t">${esc(a.category||'')} · ${a.status==='active'?"<span class='ok'>已生效</span>":"<span style='color:var(--ylw)'>草稿</span>"} ${srcBadge}</div>
+    <div class="m"><span class="pill">命中：${esc(a.question_pattern)}</span><span class="pill">依据：${esc((safeRefs(a.policy_refs)||[]).join(' / ')||'-')}</span></div>
+    <div class="c">${esc(a.answer_md)}</div>
+    ${a.status!=='active'?`<button class="mini" onclick="reviewAnswer(${a.id})">审定生效</button>`:''}
+    <button class="mini ghost" onclick='editAnswer(${JSON.stringify(a)})'>编辑</button></div>`;
+  }).join("");
+}
+function safeRefs(r){try{return typeof r==='string'?JSON.parse(r||'[]'):(r||[]);}catch(e){return [];}}
+function editAnswer(a){document.getElementById("anId").value=a.id;document.getElementById("anCat").value=a.category||"";document.getElementById("anPat").value=a.question_pattern||"";document.getElementById("anMd").value=a.answer_md||"";document.getElementById("anRefs").value=safeRefs(a.policy_refs).join("，");document.getElementById("anSteps").value=a.steps||"";window.scrollTo(0,0);}
+function resetAnswer(){["anId","anCat","anPat","anMd","anRefs","anSteps"].forEach(i=>document.getElementById(i).value="");}
+async function saveAnswer(status){
+  const b={id:document.getElementById("anId").value||null,category:document.getElementById("anCat").value,question_pattern:document.getElementById("anPat").value,answer_md:document.getElementById("anMd").value,policy_refs:document.getElementById("anRefs").value.split(/[，,]/).map(s=>s.trim()).filter(Boolean),steps:document.getElementById("anSteps").value,status};
+  const r=document.getElementById("anRes");r.classList.remove("hide");
+  const d=await jwtPost("/api/org/answer/save",b);
+  r.innerHTML=d.ok?"<span class='ok'>✓ 已保存"+(status==='active'?"并生效":"为草稿")+"</span>":"<span class='err'>失败：命中关键词与标准答案必填</span>";
+  if(d.ok){resetAnswer();loadAnswers();loadMe();}
+}
+async function reviewAnswer(id){const d=await jwtPost("/api/org/answer/review",{id,operator:"负责人"});if(d.ok){loadAnswers();loadMe();}else{alert(d.msg||"失败");}}
+
+// ===== 沉淀社区精华（M2 个人↔机构闭环）=====
+async function searchCommunity(){
+  const q=document.getElementById("cmQ").value.trim();
+  const box=document.getElementById("cmRes");
+  if(!q){box.innerHTML="<span class='err'>请输入关键词</span>";return;}
+  box.innerHTML="搜索中…";
+  const d=await fetch(API+"/api/community/search-replies?q="+encodeURIComponent(q)+"&limit=20",{headers:hdr()}).then(r=>r.json());
+  if(!d.ok){box.innerHTML="<span class='err'>"+esc(d.msg||"搜索失败")+"</span>";return;}
+  const rs=d.replies||[];
+  if(!rs.length){box.innerHTML="<span class='meta'>未找到高赞/已采纳的匹配回答，换个词试试。</span>";return;}
+  box.innerHTML="<div class='meta' style='margin-bottom:8px;'>找到 "+rs.length+" 条高价值回答：</div>"+rs.map(r=>{
+    const badge=r.is_accepted?"<span class='ok'>已采纳</span>":"<span style='color:var(--ylw)'>🔥高赞</span>";
+    return `<div class="item">
+      <div class="t">${esc(r.post_title)} ${badge} <span class="pill">${esc(r.scene_tag||'')}</span></div>
+      <div class="m"><span class="pill">答主 ${esc(r.author)} 🏅${r.reputation}</span><span class="pill">👍 ${r.like_count}</span></div>
+      <div class="c">${esc(r.content)}</div>
+      <button class="mini" onclick="promoteReply(${r.post_id},${r.reply_id})">沉淀为机构口径</button></div>`;
+  }).join("");
+}
+async function promoteReply(post_id,reply_id){
+  if(!confirm("将该回答复制为机构「标准口径」草稿？审定后生效。"))return;
+  const d=await jwtPost("/api/org/promote-reply",{post_id,reply_id});
+  if(!d.ok){alert(d.msg||"沉淀失败");return;}
+  alert("✓ 已沉淀为机构口径草稿（ID "+d.id+"），请在上方编辑并审定生效。");
+  loadAnswers();loadMe();
+}
+
+async function doAsk(){
+  const q=document.getElementById("askQ").value.trim();const r=document.getElementById("askRes");
+  if(!q){alert("请输入问题");return;}
+  r.classList.remove("hide");r.textContent="查询中…";
+  const d=await jwtPost("/api/org/ask",{question:q});
+  if(!d.ok){r.innerHTML="<span class='err'>"+esc(d.msg||JSON.stringify(d))+"</span>";return;}
+  const badge=d.locked?'<span class="badge b-on">📘 机构标准口径（命中即锁定）</span>':'<span class="badge b-wait">🤖 AI 生成 · 待专家确认</span>';
+  r.innerHTML=badge+"<div style='margin-top:8px;white-space:pre-wrap'>"+esc(d.answer)+"</div>"+
+    ((d.policy_refs&&d.policy_refs.length)?"<div class='meta' style='color:var(--sub);margin-top:8px'>📌 依据："+esc(d.policy_refs.join(" ｜ "))+"</div>":"");
+}
+
+async function loadMembers(){
+  const box=document.getElementById("memberList");
+  const d=await jwtGet("/api/org/members");
+  if(!d.ok){box.innerHTML="<span class='err'>"+esc(d.msg)+"</span>";return;}
+  const ms=d.members||[];document.getElementById("mbCount").textContent="共 "+ms.length;
+  box.innerHTML=ms.map(m=>`<div class="item"><div class="t">${esc(m.name||m.login_name)}</div>
+    <div class="m"><span class="pill">${esc(m.login_name)}</span><span class="pill">${esc(m.role)}</span><span class="pill">${esc(m.seat_status)}</span></div></div>`).join("");
+}
+async function inviteMember(){
+  const r=document.getElementById("mbRes");r.classList.remove("hide");
+  const d=await jwtPost("/api/org/member/invite",{login:document.getElementById("mbLogin").value.trim(),name:document.getElementById("mbName").value.trim(),role:document.getElementById("mbRole").value});
+  if(d.ok){r.innerHTML=`<span class='ok'>✓ 账号已生成：登录名 <b>${esc(d.login)}</b> / 口令 <b>${esc(d.password)}</b></span>`;document.getElementById("mbLogin").value="";document.getElementById("mbName").value="";loadMembers();loadMe();}
+  else{r.innerHTML="<span class='err'>"+esc(d.msg||"失败")+"</span>";}
+}
+
+let RULE_METRICS=[];
+async function loadRisk(){
+  const d=await jwtGet("/api/org/risk/rules");
+  if(!d.ok)return;
+  RULE_METRICS=d.metrics||[];
+  document.getElementById("rkMetrics").innerHTML=RULE_METRICS.map(m=>
+    `<div><label>${esc(m.label)}</label><input id="rk_${m.key}" type="number" step="any" placeholder="—"></div>`).join("");
+  const c=await jwtGet("/api/org/clients");
+  const sel=document.getElementById("rkClient");
+  sel.innerHTML=(c.clients||[]).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("");
+  loadReports();
+}
+function rkData(){const o={};RULE_METRICS.forEach(m=>{const v=document.getElementById("rk_"+m.key).value;if(v!=="")o[m.key]=v;});return o;}
+async function saveRiskInput(){
+  const r=document.getElementById("rkRes");r.classList.remove("hide");
+  const d=await jwtPost("/api/org/risk/input/save",{client_id:document.getElementById("rkClient").value,period:document.getElementById("rkPeriod").value.trim(),data:rkData()});
+  r.innerHTML=d.ok?"<span class='ok'>✓ 填报已保存</span>":"<span class='err'>"+esc(d.msg||"失败")+"</span>";
+}
+async function scanRisk(){
+  const r=document.getElementById("rkRes");r.classList.remove("hide");r.textContent="扫描中…";
+  const d=await jwtPost("/api/org/risk/scan",{client_id:document.getElementById("rkClient").value,period:document.getElementById("rkPeriod").value.trim()});
+  if(!d.ok){r.innerHTML="<span class='err'>"+esc(d.msg||"失败")+"</span>";return;}
+  renderScan(r,d);loadReports();
+}
+function renderScan(container,d){
+  if(d.status==="insufficient"){container.innerHTML="<span style='color:var(--ylw)'>⚠ 数据不足，无法完成初筛（请先填报该客户指标）</span>";return;}
+  const lvC={high:"b-off",mid:"b-wait",low:"b-on"}[d.level]||"b-bl";
+  let h=`<span class="badge ${lvC}">初筛等级：${esc(d.level)}</span> <b>${esc(d.client)}</b>　命中 ${d.hits.length} 项`;
+  if(d.missing&&d.missing.length)h+=`　<span class='meta'>（${d.missing.length} 项数据不足）</span>`;
+  h+="<div style='margin-top:8px'>";
+  if(!d.hits.length)h+="<span class='meta'>未命中任何规则（仅代表未命中现有指标，不代表无风险）</span>";
+  d.hits.forEach(x=>{h+=`<div class="item" style="padding:8px"><div class="t">${esc(x.name)}</div><div class="m"><span class="pill">${esc(x.metric)} = ${esc(String(x.value))} ${esc(x.op)} ${esc(String(x.threshold))}</span></div><div class="c" style="font-size:12px">依据：${esc(x.basis||'-')}</div></div>`;});
+  h+="</div>";
+  h+=`<div class='meta' style='margin-top:8px;color:var(--ylw)'>${esc(d.disclaimer||'')}</div>`;
+  container.innerHTML=h;
+}
+async function batchRisk(){
+  const r=document.getElementById("rkRes");r.classList.remove("hide");
+  const c=await jwtGet("/api/org/clients");const ids=(c.clients||[]).map(x=>x.id);
+  if(!ids.length){r.innerHTML="<span class='err'>暂无客户</span>";return;}
+  const d=await jwtPost("/api/org/risk/batch",{client_ids:ids,period:document.getElementById("rkPeriod").value.trim()});
+  if(!d.ok){r.innerHTML="<span class='err'>"+esc(d.msg||"失败")+"</span>";return;}
+  r.innerHTML="批量扫描中…（0/"+d.total+"）";pollTask();
+}
+async function pollTask(){
+  const t=await jwtGet("/api/org/risk/task");
+  const r=document.getElementById("rkRes");
+  if(t.running){r.innerHTML="批量扫描中…（"+t.done+"/"+t.total+"）";setTimeout(pollTask,600);}
+  else{r.innerHTML=`<span class='ok'>✓ 批量扫描完成（${t.done}/${t.total}）</span>`;loadReports();}
+}
+async function loadReports(){
+  const box=document.getElementById("reportList");
+  const d=await jwtGet("/api/org/risk/reports");
+  if(!d.ok){box.innerHTML="<span class='err'>"+esc(d.msg)+"</span>";return;}
+  const rs=d.reports||[];document.getElementById("rpCount").textContent="共 "+rs.length;
+  if(!rs.length){box.textContent="暂无报告。";return;}
+  box.innerHTML=rs.map(x=>{
+    const st=x.status==="insufficient"?"<span style='color:var(--ylw)'>数据不足</span>":(x.risk_items.length?`<span style='color:var(--red)'>命中 ${x.risk_items.length}</span>`:"<span class='ok'>未命中</span>");
+    return `<div class="item"><div class="t">${esc(x.title)}</div><div class="m"><span class="pill">${esc(x.generated_at||'')}</span>${st}</div></div>`;
+  }).join("");
+}
+
+function switchTab(t){
+  document.querySelectorAll(".tab").forEach(e=>e.classList.toggle("active",e.dataset.tab===t));
+  document.querySelectorAll(".tabpane").forEach(e=>e.classList.add("hide"));
+  document.getElementById("tab-"+t).classList.remove("hide");
+  if(t==="clients")loadClients();if(t==="answers")loadAnswers();if(t==="risk")loadRisk();if(t==="members")loadMembers();
+}
+
+if(TOKEN){showApp();}
+</script>
+</body>
+</html>

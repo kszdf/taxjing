@@ -1,0 +1,35 @@
+<view class="container">
+  <view class="card">
+    <view class="searchbar">
+      <input class="search-input" placeholder="搜政策标题 / 文号 / 税种" placeholder-class="ph"
+             value="{{keyword}}" bindinput="onInput" bindconfirm="onSearch" confirm-type="search" />
+      <view class="search-btn" bindtap="onSearch">搜索</view>
+      <view class="search-clear" wx:if="{{keyword}}" bindtap="onClear">清空</view>
+    </view>
+    <view class="text2" style="margin-top:14rpx;" wx:if="{{hint}}">{{hint}}</view>
+  </view>
+
+  <view class="card" wx:if="{{loading}}">
+    <view class="text2">加载中…</view>
+  </view>
+
+  <view class="card policy" wx:for="{{policies}}" wx:key="doc_number"
+        data-doc="{{item.doc_number}}" data-status="{{item.status}}" bindtap="onItemTap">
+    <view class="row between">
+      <view class="p-title">{{item.title}}</view>
+      <view class="tag {{item.cls}}">{{item.status_label}}</view>
+    </view>
+    <view class="text2 p-meta">文号：{{item.doc_number || '—'}} · {{item.category || '未分类'}}</view>
+    <view class="text2 p-meta" wx:if="{{item.has_clauses >= 0}}">
+      有效条款 {{item.has_clauses}}{{item.aging ? ' · 官方时效 ' + item.aging : ''}}
+    </view>
+    <view class="text2 p-meta" wx:else>有效条款 {{item.valid_clauses}}/{{item.total_clauses}}</view>
+    <view class="p-src" wx:if="{{item.source_url}}" data-url="{{item.source_url}}" catchtap="onCopySource">
+      查看官方原文 ↗
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{!loading && policies.length === 0}}">
+    <view class="text2">未命中。可换个关键词试试（支持文号，如「2023年第12号」「财税〔2018〕33号」）。</view>
+  </view>
+</view>

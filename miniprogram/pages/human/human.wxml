@@ -1,0 +1,31 @@
+<view class="container">
+  <view class="card">
+    <textarea class="input" placeholder="请简要描述您的财税问题，人工将在1个工作日内回复（消耗30积分）"
+      placeholder-class="ph" value="{{question}}" bindinput="onInput" maxlength="500" />
+    <button class="btn submit" loading="{{loading}}" bindtap="onSubmit">提交人工快答</button>
+  </view>
+
+  <view class="section-title text2">我的工单</view>
+
+  <view class="card" wx:if="{{loadingTickets}}">
+    <view class="text2">工单加载中…</view>
+  </view>
+
+  <view class="card ticket" wx:for="{{tickets}}" wx:key="id">
+    <view class="row between">
+      <view class="t-id text2">工单 #{{item.id}}</view>
+      <view class="tag {{item.status === 'answered' ? 'tag-green' : 'tag-yellow'}}">
+        {{item.status === 'answered' ? '已回复' : '待处理'}}
+      </view>
+    </view>
+    <view class="t-q">问：{{item.question}}</view>
+    <view class="t-a" wx:if="{{item.status === 'answered'}}">
+      答：{{item.reply}}
+    </view>
+    <view class="text2 t-time" wx:if="{{item.created_at}}">提交：{{item.created_at}}</view>
+  </view>
+
+  <view class="card" wx:if="{{!loadingTickets && tickets.length === 0}}">
+    <view class="text2">暂无工单</view>
+  </view>
+</view>

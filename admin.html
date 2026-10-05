@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>慧根堂 · 财税AI智库 运营后台</title>
+<style>
+  :root{--bg:#0f1419;--card:#1a2330;--line:#2a3645;--txt:#e6edf3;--sub:#8b98a5;--red:#e5484d;--grn:#3fb950;--blu:#388bfd;--ylw:#d29922;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--txt);padding:20px;line-height:1.5;}
+  h1{font-size:20px;margin-bottom:4px;}
+  .sub{color:var(--sub);font-size:13px;margin-bottom:20px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;}
+  .card h2{font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .badge{font-size:12px;padding:2px 8px;border-radius:20px;font-weight:600;}
+  .b-on{background:rgba(63,185,80,.15);color:var(--grn);}
+  .b-off{background:rgba(229,72,77,.15);color:var(--red);}
+  .b-wait{background:rgba(210,153,34,.15);color:var(--ylw);}
+  .b-ok{background:rgba(63,185,80,.15);color:var(--grn);}
+  .b-warn{background:rgba(210,153,34,.15);color:var(--ylw);}
+  .b-bad{background:rgba(229,72,77,.15);color:var(--red);}
+  .b-gray{background:rgba(139,152,165,.15);color:var(--sub);}
+  button{background:var(--blu);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;}
+  button:hover{opacity:.9;} button:disabled{opacity:.5;cursor:not-allowed;}
+  button.mini{background:var(--grn);padding:5px 10px;font-size:12px;}
+  button.danger{background:var(--red);}
+  input,textarea{width:100%;background:#0d1117;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:13px;margin-bottom:8px;}
+  label{font-size:12px;color:var(--sub);display:block;margin-bottom:4px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .row>*{flex:1;min-width:140px;}
+  .pill{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;background:#0d1117;border:1px solid var(--line);color:var(--sub);margin-right:6px;}
+  .item{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:#0d1117;}
+  .item .t{font-size:14px;font-weight:600;margin-bottom:4px;}
+  .item .m{font-size:12px;color:var(--sub);margin-bottom:6px;}
+  .item .c{font-size:12px;color:#c9d4e0;margin-bottom:8px;white-space:pre-wrap;}
+  .res{font-size:13px;margin-top:10px;padding:8px 10px;border-radius:8px;background:#0d1117;border:1px solid var(--line);}
+  .ok{color:var(--grn);} .err{color:var(--red);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media(max-width:820px){.grid{grid-template-columns:1fr;}}
+  .meta{font-size:12px;color:var(--sub);}
+  a{color:var(--blu);}
+  .loginbar{position:sticky;top:0;z-index:5;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .loginbar .meta{flex:1;}
+  .reply-box{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px;background:#11161d;}
+  .audit-row{font-size:12px;border-bottom:1px solid var(--line);padding:6px 0;display:flex;gap:10px;flex-wrap:wrap;}
+  .audit-row .a{color:var(--blu);font-weight:600;min-width:120px;}
+  .audit-row .tg{color:var(--sub);}
+</style>
+</head>
+<body>
+  <h1>慧根堂 · 财税AI智库 · 运营后台</h1>
+  <div class="sub">政策人工复核（零错误安全闸门） · 转人工快答工单 · 企微法币充值确认（平台不碰资金） · 操作留痕</div>
+
+  <div class="loginbar">
+    <div id="loginState" class="meta">未登录：敏感操作需先输入运营口令。</div>
+    <input id="tokenInput" placeholder="运营口令 ADMIN_TOKEN" style="max-width:240px;margin:0;">
+    <button onclick="doLogin()">登录</button>
+    <button class="danger" onclick="doLogout()">退出</button>
+  </div>
+
+  <div class="card">
+    <h2>模型状态 <span id="llmBadge" class="badge b-off">检测中…</span></h2>
+    <div class="meta" id="llmMeta">—</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>① 政策复核台 <span id="briefCount" class="badge b-wait">—</span></h2>
+      <p class="meta" style="margin-bottom:8px;">抓取/入库的政策先进入此队列，**逐条对照官方原文**后「复核生效」，才载入裁决引擎参与"新优于旧"与条款置灰。这是零错误的最后一道人工闸门。</p>
+      <div id="catStats" class="meta" style="margin-bottom:6px;">语料覆盖统计加载中…</div>
+      <div id="briefDist" class="meta" style="margin-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="loadBrief()">刷新队列</button>
+        <button class="mini" onclick="batchApprove()">批量生效（仅通过校验的）</button>
+        <button class="mini" onclick="autoReview()">按官方时效自动分流</button>
+        <button class="mini" onclick="rollbackAuto()">回滚自动生效</button>
+      </div>
+      <div id="briefList" style="margin-top:12px;"></div>
+      <div id="previewPanel" style="display:none;margin-top:14px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>② 企微法币充值确认</h2>
+      <p class="meta" style="margin-bottom:10px;">用户已在企业微信向公司转法币后，运营在此确认 → 积分 1:1 到账。平台不经资金池，规避二清/支付牌照。</p>
+      <label>用户 openid</label>
+      <input id="rcOpenid" value="demo-user-zhang" placeholder="demo-user-zhang">
+      <label>充值积分（1:1）</label>
+      <input id="rcAmount" type="number" value="100">
+      <label>流水备注 ref</label>
+      <input id="rcRef" value="wecom-transfer" placeholder="wecom-transfer">
+      <button onclick="doRecharge()">确认到账</button>
+      <div id="rcRes" class="res" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>③ 转人工快答 · 工单台 <span id="tkCount" class="badge b-wait">—</span></h2>
+    <p class="meta" style="margin-bottom:10px;">用户花 30 积分提交单点问题；运营在此查看并回复，用户端即时可见。</p>
+    <button onclick="loadHuman()">刷新工单</button>
+    <div id="tkList" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="card">
+    <h2>④ 用户积分 / 状态查询</h2>
+    <div class="row">
+      <div>
+        <label>用户 openid</label>
+        <input id="stOpenid" value="demo-user-zhang">
+      </div>
+      <div style="flex:0 0 auto;display:flex;align-items:flex-end;">
+        <button onclick="loadState()">查询</button>
+      </div>
+    </div>
+    <div id="stRes" class="res" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>⑤ 操作留痕（审计）</h2>
+    <p class="meta" style="margin-bottom:10px;">复核、充值、回复等敏感操作均自动记录，便于追溯。</p>
+    <button onclick="loadAudit()">刷新留痕</button>
+    <div id="auditList" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="card">
+    <h2>⑥ 同行问 · 社区管理 <span id="cmCount" class="badge b-wait">—</span></h2>
+    <p class="meta" style="margin-bottom:10px;">从业者互助帖：匿名帖在此可查真实身份（合规要求）；删帖/置顶均留痕。</p>
+    <button onclick="loadCommunity()">刷新帖子</button>
+    <div id="cmList" style="margin-top:12px;"></div>
+  </div>
+
+  <p class="meta">配套原型：<a href="/tax-ai-prototype.html">/tax-ai-prototype.html</a> ｜ 微信小程序源码：<code>miniprogram/</code> 目录（用微信开发者工具打开，部署见 miniprogram/README.md）｜ 全部接口已通过 curl 实测。</p>
+
+<script>
+const API = "";
+let ADMIN_AUTH = "";
+function apiGet(p){return fetch(API+p).then(r=>r.json());}
+function apiPost(p,b){return fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}).then(r=>r.json());}
+function apiPostAuth(p,b){return apiPost(p,Object.assign({admin_auth:ADMIN_AUTH},b));}
+function setBadge(el,cls,txt){el.className="badge "+cls;el.textContent=txt;}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function setLogin(){
+  const st=document.getElementById("loginState");
+  if(ADMIN_AUTH){st.innerHTML="<span class='ok'>已登录（口令已载入，敏感操作将自动携带）</span>";}
+  else{st.textContent="未登录：敏感操作需先输入运营口令。";}
+}
+async function doLogin(){
+  const t=document.getElementById("tokenInput").value.trim();
+  if(!t){alert("请输入口令");return;}
+  const d=await apiPost("/api/admin/login",{token:t});
+  if(d.ok){ADMIN_AUTH=t;setLogin();loadLLM();alert("登录成功");}
+  else{alert("口令错误："+(d.msg||""));}
+}
+function doLogout(){ADMIN_AUTH="";setLogin();}
+
+async function loadLLM(){
+  const el=document.getElementById("llmBadge");
+  const m=document.getElementById("llmMeta");
+  try{
+    const d=await apiGet("/api/llm/status");
+    if(d.enabled){setBadge(el,"b-on","大模型已接入 (deep_llm)");m.textContent="已配置 LLM_API_KEY，/api/ask 将走 RAG+大模型生成。";}
+    else{setBadge(el,"b-off","规则引擎 (rule_based)");m.textContent="未配置 LLM_API_KEY，/api/ask 自动回退规则引擎。配置 key 后即切换大模型。";}
+  }catch(e){setBadge(el,"b-off","异常");m.textContent=String(e);}
+}
+
+let BRIEF_ITEMS=[];
+
+function agingCls(a){
+  a=a||'';
+  if(a.indexOf('有效')>=0 && a.indexOf('废止')<0) return 'b-ok';
+  if(a.indexOf('已修改')>=0) return 'b-warn';
+  if(a.indexOf('废止')>=0||a.indexOf('失效')>=0) return 'b-bad';
+  if(a.indexOf('尚未生效')>=0) return 'b-gray';
+  return 'b-gray';
+}
+
+async function loadCatalogStats(){
+  const el=document.getElementById("catStats");
+  if(!el) return;
+  try{
+    const d=await apiGet("/api/policy/catalog-stats");
+    const bs=d.by_status||{};
+    el.innerHTML="📚 语料覆盖：目录共 <b>"+(d.total||0)+"</b> 条 ｜ 可作依据 <b>"+(d.searchable||0)+"</b>"
+      +"（现行有效条款 "+(d.active_clauses||0)+" 条）｜ 仅收录目录 <b>"+(d.catalog_only||0)+"</b>"
+      +" ｜ 已失效存档 "+((bs.invalid||0)+(bs.archived||0));
+  }catch(e){ el.textContent="（覆盖统计暂不可用）"; }
+}
+
+async function loadBrief(){
+  loadCatalogStats();
+  const wrap=document.getElementById("briefList");
+  const cnt=document.getElementById("briefCount");
+  const dist=document.getElementById("briefDist");
+  wrap.innerHTML="<div class='meta'>加载中…</div>";
+  try{
+    const d=await apiGet("/api/policy/brief?limit=200");
+    BRIEF_ITEMS=d.items||[];
+    const total=(d.total!=null?d.total:BRIEF_ITEMS.length);
+    cnt.textContent="待复核 "+total;
+    const ds=(d.aging_dist||[]).map(x=>`<span class="pill">${esc(x.a)} ${x.c}</span>`).join(" ");
+    dist.innerHTML=ds?("官方时效分布："+ds):"";
+    if(!BRIEF_ITEMS.length){wrap.innerHTML="<div class='meta'>队列为空，全部已复核。</div>";return;}
+    wrap.innerHTML=BRIEF_ITEMS.map(it=>`
+      <div class="item">
+        <div class="t">${esc(it.title||'')}</div>
+        <div class="m">
+          <span class="badge ${agingCls(it.official_aging)}">${esc(it.official_aging||'未标时效')}</span>
+          <span class="pill">${esc(it.doc_number||'无文号')}</span>
+          <span class="pill">施行 ${esc(it.effective_date||'-')}</span>
+          <span class="pill">条款 ${it.n_act}/${it.n_all}</span>
+          <span class="pill">正文 ${it.body_len||0} 字</span>
+          <span class="pill">${esc(it.category||'未分类')}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+          <button class="mini" onclick="preview(${it.id})">核对原文</button>
+          <button class="mini" onclick="review(${it.id},this,'approve')">复核生效</button>
+          <button class="mini" onclick="review(${it.id},this,'skip')">标记待定</button>
+          <button class="mini" onclick="review(${it.id},this,'archive')">归档</button>
+        </div>
+      </div>`).join("");
+  }catch(e){wrap.innerHTML="<div class='err'>加载失败："+esc(String(e))+"</div>";}
+}
+
+async function preview(id){
+  const p=document.getElementById("previewPanel");
+  p.style.display="block";
+  p.innerHTML="<div class='meta'>加载原文中…</div>";
+  try{
+    const d=await apiGet("/api/policy/preview?id="+id);
+    if(!d.ok){p.innerHTML="<div class='err'>"+esc(d.msg||'加载失败')+"</div>";return;}
+    const x=d.policy,q=x.quality||{};
+    const bad=(q.blocking||[]).length, warn=(q.warnings||[]).length;
+    const qtxt = q.pass
+      ? `<span class="badge b-ok">自动校验通过</span>`
+      : `<span class="badge b-warn">需人工判断</span>`;
+    const bl = (q.blocking||[]).map(s=>`<div class="err">⛔ ${esc(s)}</div>`).join("");
+    const wl = (q.warnings||[]).map(s=>`<div class="meta">⚠️ ${esc(s)}</div>`).join("");
+    const cls=(x.clauses||[]).map(c=>`
+      <div class="item" style="margin:6px 0;">
+        <div class="m"><span class="pill">${esc(c.clause_no)}</span><span class="badge ${c.clause_status==='active'?'b-ok':'b-bad'}">${esc(c.clause_status)}</span></div>
+        <div class="c" style="white-space:pre-wrap;">${esc(c.content||'')}</div>
+      </div>`).join("");
+    p.innerHTML=`
+      <div class="item">
+        <div class="t">③ 复核详情 · ${esc(x.doc_number||'无文号')}</div>
+        <div class="m">
+          <span class="badge ${agingCls(x.official_aging)}">官方时效 ${esc(x.official_aging||'未标')}</span>
+          <span class="pill">效力 ${esc(x.official_effectlevel||'-')}</span>
+          <span class="pill">税务类型 ${esc(x.official_taxpolicy||'-')}</span>
+          <span class="pill">施行 ${esc(x.effective_date||'-')}</span>
+        </div>
+        <div style="margin:6px 0;">${qtxt}${bl}${wl}</div>
+        <div style="margin:8px 0;">
+          <div class="meta">① 官方原文页（请点开逐条比对）：</div>
+          <div><a href="${esc(x.source_url||'#')}" target="_blank" rel="noopener">${esc(x.source_url||'(无链接)')}</a></div>
+        </div>
+        <div style="margin:8px 0;">
+          <div class="meta">② 标题：${esc(x.title||'')}</div>
+          <div class="meta">统一社会信用/发布：${esc(x.publish_date||'-')} ｜ 正文 ${x.body_len||0} 字 ｜ 条款 ${(x.clauses||[]).length} 条</div>
+        </div>
+        <div style="margin:8px 0;"><div class="meta">③ 入库条款原文（应与你看到的官方原文一致）：</div>${cls||"<div class='err'>无条款</div>"}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="mini" onclick="review(${x.id},this,'approve')">原文一致 · 复核生效</button>
+          <button class="mini" onclick="review(${x.id},this,'approve',true)">强制生效（覆盖校验）</button>
+          <button class="mini" onclick="review(${x.id},this,'skip')">标记待定</button>
+          <button class="mini" onclick="review(${x.id},this,'archive')">归档</button>
+          <button class="mini" onclick="document.getElementById('previewPanel').style.display='none'">收起</button>
+        </div>
+      </div>`;
+    p.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(e){p.innerHTML="<div class='err'>加载失败："+esc(String(e))+"</div>";}
+}
+
+async function review(id,btn,action,force){
+  const old=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent="处理中…";}
+  const d=await apiPostAuth("/api/policy/review",{id,action:action||'approve',force:!!force});
+  if(d.ok){
+    if(btn){btn.textContent="✓ 完成";btn.style.background="var(--grn)";}
+    loadLLM();loadBrief();
+    const sk=(d.skipped||[]);
+    if(sk.length) alert("已跳过：\n"+sk.map(s=>"#"+s.id+" "+s.why).join("\n"));
+  }else{
+    if(btn){btn.disabled=false;btn.textContent=old;}
+    alert("操作失败："+(d.msg||JSON.stringify(d)));
+  }
+}
+
+async function batchApprove(){
+  const ids=BRIEF_ITEMS.map(x=>x.id);
+  if(!ids.length){alert("队列为空");return;}
+  if(!confirm("将对队列中 "+ids.length+" 条执行「复核生效」，未通过自动校验的会被跳过。继续？")) return;
+  const d=await apiPostAuth("/api/policy/review",{ids,action:'approve'});
+  alert(d.ok?d.msg:("失败："+(d.msg||'')));
+  loadBrief();loadLLM();
+}
+
+async function autoReview(){
+  if(!confirm("按官方时效自动分流：官方标『现行有效』且通过自动校验者直接生效（标记为系统预校验，可一键回滚）。继续？")) return;
+  const d=await apiPostAuth("/api/policy/autoreview",{limit:1000});
+  alert(d.ok?d.msg:("失败："+(d.msg||'')));
+  loadBrief();loadLLM();
+}
+
+async function rollbackAuto(){
+  if(!confirm("将把所有『系统预校验自动生效』的政策回滚为待复核。继续？")) return;
+  const d=await apiPostAuth("/api/policy/rollback-auto",{});
+  alert(d.ok?d.msg:("失败："+(d.msg||'')));
+  loadBrief();loadLLM();
+}
+
+async function doRecharge(){
+  const res=document.getElementById("rcRes");
+  res.style.display="block";res.className="res";
+  const b={openid:document.getElementById("rcOpenid").value,amount:parseInt(document.getElementById("rcAmount").value||"0"),ref:document.getElementById("rcRef").value};
+  if(!b.openid||!b.amount){res.innerHTML="<span class='err'>请填 openid 与金额</span>";return;}
+  const d=await apiPostAuth("/api/admin/recharge-confirm",b);
+  if(d.ok){res.innerHTML=`<span class='ok'>✓ ${esc(d.msg||'')}</span><br>当前余额：<b>${d.balance}</b> 积分`;loadState();}
+  else{res.innerHTML=`<span class='err'>失败（权限？）：${esc(JSON.stringify(d))}</span>`;}
+}
+
+async function loadHuman(){
+  const wrap=document.getElementById("tkList");
+  const cnt=document.getElementById("tkCount");
+  wrap.innerHTML="<div class='meta'>加载中…</div>";
+  try{
+    const d=await apiGet("/api/human/list");
+    const items=d.tickets||[];
+    const pend=items.filter(t=>t.status==="pending").length;
+    cnt.textContent=`共 ${items.length}（待回 ${pend}）`;
+    if(!items.length){wrap.innerHTML="<div class='meta'>暂无工单。</div>";return;}
+    wrap.innerHTML=items.map(t=>`
+      <div class="item">
+        <div class="t">#${t.id} · ${esc(t.status==="pending"?"待回复":"已回复")} · ${esc(t.openid||'')}</div>
+        <div class="m"><span class="pill">${esc(t.created_at||'-')}</span><span class="pill">30积分</span></div>
+        <div class="c">${esc(t.question||'')}</div>
+        ${t.reply?`<div class="reply-box"><b>专家回复：</b><br>${esc(t.reply)}</div>`:`
+        <div class="reply-box">
+          <label>专家回复内容</label>
+          <textarea id="rep-${t.id}" placeholder="输入张老师的专业答复…"></textarea>
+          <button class="mini" onclick="reply(${t.id},this)">提交回复</button>
+        </div>`}
+      </div>`).join("");
+  }catch(e){wrap.innerHTML="<div class='err'>加载失败："+esc(String(e))+"</div>";}
+}
+
+async function reply(id,btn){
+  const ta=document.getElementById("rep-"+id);
+  const reply=ta.value.trim();
+  if(!reply){alert("请输入回复内容");return;}
+  btn.disabled=true;btn.textContent="提交中…";
+  const d=await apiPostAuth("/api/human/reply",{id,reply,operator:"张老师"});
+  if(d.ok){loadHuman();}
+  else{btn.disabled=false;btn.textContent="提交回复";alert("回复失败："+(d.msg||JSON.stringify(d)));}
+}
+
+async function loadState(){
+  const res=document.getElementById("stRes");
+  const oid=document.getElementById("stOpenid").value;
+  res.style.display="block";res.className="res";res.innerHTML="查询中…";
+  const d=await apiGet("/api/state?openid="+encodeURIComponent(oid));
+  if(d&&d.balance!==undefined){
+    res.innerHTML=`<b>余额：</b>${d.balance} 积分 ｜ <b>等级：</b>${esc(d.level||'-')} ｜ <b>邀请码：</b>${esc(d.invite_code||'-')}<br><span class='meta'>今日获分 ${d.today_earn||0} ｜ 累计获分 ${d.total_earn||0} ｜ 邀请 ${d.invite_count||0} 人</span>`;
+  }else{res.innerHTML="<span class='err'>"+esc(JSON.stringify(d))+"</span>";}
+}
+
+async function loadAudit(){
+  const wrap=document.getElementById("auditList");
+  wrap.innerHTML="<div class='meta'>加载中…</div>";
+  try{
+    const d=await apiGet("/api/admin/audit");
+    const logs=d.logs||[];
+    if(!logs.length){wrap.innerHTML="<div class='meta'>暂无操作记录。</div>";return;}
+    wrap.innerHTML=logs.map(l=>`
+      <div class="audit-row">
+        <span class="a">${esc(l.action||'')}</span>
+        <span class="tg">${esc(l.target||'')} ${esc(l.detail||'')}</span>
+        <span class="tg">by ${esc(l.operator||'')} @ ${esc(l.ip||'')} ${esc(l.created_at||'')}</span>
+      </div>`).join("");
+  }catch(e){wrap.innerHTML="<div class='err'>加载失败："+esc(String(e))+"</div>";}
+}
+
+async function loadCommunity(){
+  const wrap=document.getElementById("cmList");
+  const cnt=document.getElementById("cmCount");
+  wrap.innerHTML="<div class='meta'>加载中…</div>";
+  try{
+    const d=await apiPostAuth("/api/admin/community/list",{});
+    if(!d.ok){wrap.innerHTML="<div class='err'>无权限（需登录口令）："+esc(d.msg||'')+"</div>";return;}
+    const items=d.posts||[];
+    const removed=items.filter(p=>p.status==="removed").length;
+    cnt.textContent=`共 ${items.length}（已删 ${removed}）`;
+    if(!items.length){wrap.innerHTML="<div class='meta'>暂无帖子。</div>";return;}
+    wrap.innerHTML=items.map(p=>`
+      <div class="item">
+        <div class="t">#${p.id} · ${esc(p.title||'')}
+          ${p.pinned?`<span class="badge b-warn">置顶</span>`:""}
+          ${p.status==="accepted"?`<span class="badge b-ok">已解决</span>`:""}
+          ${p.status==="removed"?`<span class="badge b-bad">已删除</span>`:""}
+          ${p.is_anonymous?`<span class="pill">匿名（真实：${esc(p.openid||'')} / ${esc(p.nickname||'-')}）</span>`:`<span class="pill">${esc(p.nickname||p.openid||'')}</span>`}
+        </div>
+        <div class="m">
+          <span class="pill">${esc(p.scene_tag||'')}</span>
+          <span class="pill">💬 ${p.reply_count||0} · 👁 ${p.view_count||0}</span>
+          <span class="pill">${esc(p.created_at||'-')}</span>
+        </div>
+        <div style="margin-top:8px;">
+          ${p.status!=="removed"?`
+          <button class="mini" onclick="cmPin(${p.id},this)">${p.pinned?"取消置顶":"置顶"}</button>
+          <button class="mini" onclick="cmRemove(${p.id},this)">删帖</button>`:`<span class="meta">—</span>`}
+        </div>
+      </div>`).join("");
+  }catch(e){wrap.innerHTML="<div class='err'>加载失败："+esc(String(e))+"</div>";}
+}
+
+async function cmPin(id,btn){
+  btn.disabled=true;
+  const d=await apiPostAuth("/api/admin/community/pin",{post_id:id});
+  if(d.ok){loadCommunity();}
+  else{btn.disabled=false;alert("操作失败："+(d.msg||""));}
+}
+
+async function cmRemove(id,btn){
+  if(!confirm("确认删除帖子 #"+id+"（含其下所有回答）？软删除，可追溯。")){return;}
+  btn.disabled=true;
+  const d=await apiPostAuth("/api/admin/community/remove",{post_id:id});
+  if(d.ok){loadCommunity();loadAudit();}
+  else{btn.disabled=false;alert("删除失败："+(d.msg||""));}
+}
+
+setLogin();loadLLM();loadBrief();loadHuman();loadAudit();loadCommunity();
+</script>
+</body>
+</html>

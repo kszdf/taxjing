@@ -1,0 +1,97 @@
+<view class="container">
+  <!-- 我的社区资产（M2：声望/积分） -->
+  <view class="card my-bar">
+    <view class="my-item">
+      <view class="my-num">🏅 {{myRep}}</view>
+      <view class="text2">我的声望</view>
+    </view>
+    <view class="my-item">
+      <view class="my-num">{{myPoints}}</view>
+      <view class="text2">可用积分</view>
+    </view>
+    <view class="my-item">
+      <view class="my-num">{{myAccepted}}</view>
+      <view class="text2">被采纳</view>
+    </view>
+  </view>
+
+  <!-- 顶部：发帖入口 -->
+  <view class="card post-entry" bindtap="onToggleForm">
+    <view class="row between">
+      <view>
+        <view class="entry-title">实务难题？问问同行</view>
+        <view class="text2 entry-sub">AI 先给参考答案，同行补充实战经验</view>
+      </view>
+      <view class="btn mini-btn">{{showForm ? '收起' : '发帖'}}</view>
+    </view>
+  </view>
+
+  <!-- 发帖表单 -->
+  <view class="card" wx:if="{{showForm}}">
+    <input class="input" placeholder="标题：一句话说清问题（60字内）"
+      placeholder-class="ph" value="{{formTitle}}" bindinput="onTitleInput" maxlength="60" />
+    <textarea class="input area" placeholder="补充具体情况：业务背景、卡在哪一步（2000字内）"
+      placeholder-class="ph" value="{{formContent}}" bindinput="onContentInput" maxlength="2000" />
+    <view class="form-row">
+      <picker mode="selector" range="{{sceneTags}}" bindchange="onSceneChange">
+        <view class="picker">场景：{{formScene}} ▾</view>
+      </picker>
+      <view class="row anon">
+        <text class="text2">匿名发帖</text>
+        <switch checked="{{formAnonymous}}" bindchange="onAnonymousChange" color="#388bfd" />
+      </view>
+    </view>
+    <view class="form-row bounty-row">
+      <text class="text2">悬赏积分（0~500，采纳后发给答主）</text>
+      <input class="input bounty-input" type="number" placeholder="0" value="{{formBounty}}" bindinput="onBountyInput" />
+    </view>
+    <button class="btn submit" loading="{{submitting}}" bindtap="onSubmitPost">发布（免费，每日限3条）</button>
+    <view class="text2" style="padding:12rpx 4rpx 0;color:#8a97a8;">🔒 你的身份仅自己与平台运营可见；匿名后同行也看不到你的昵称；机构主不可见。</view>
+  </view>
+
+  <!-- tab 切换 -->
+  <view class="tabs row">
+    <view class="tab {{tab === 'latest' && !scene ? 'tab-on' : ''}}" data-tab="latest" bindtap="onTabTap">最新</view>
+    <view class="tab {{tab === 'hot' ? 'tab-on' : ''}}" data-tab="hot" bindtap="onTabTap">热门</view>
+    <view class="tab {{tab === 'featured' ? 'tab-on' : ''}}" data-tab="featured" bindtap="onTabTap">精华</view>
+    <view class="tab {{tab === 'unanswered' ? 'tab-on' : ''}}" data-tab="unanswered" bindtap="onTabTap">等回答</view>
+  </view>
+
+  <!-- 场景筛选 -->
+  <scroll-view scroll-x class="scene-bar">
+    <view class="scene-chip {{scene === item ? 'scene-on' : ''}}" wx:for="{{sceneTags}}" wx:key="*this"
+      data-scene="{{item}}" bindtap="onSceneTap">{{item}}</view>
+  </scroll-view>
+
+  <!-- 帖子列表 -->
+  <view class="card" wx:if="{{loading}}">
+    <view class="text2">加载中…</view>
+  </view>
+
+  <block wx:if="{{!loading}}">
+    <view class="card post" wx:for="{{posts}}" wx:key="id"
+          data-id="{{item.id}}" bindtap="onPostTap">
+      <view class="row between">
+        <view class="row">
+          <view class="tag scene">{{item.scene_tag}}</view>
+          <view class="tag ok" wx:if="{{item.status === 'accepted'}}">已采纳</view>
+          <view class="tag bounty" wx:if="{{item.bounty_points > 0}}">🎯 悬赏{{item.bounty_points}}</view>
+          <view class="tag pin" wx:if="{{item.pinned}}">置顶</view>
+        </view>
+        <view class="text2 time">{{item.created_at}}</view>
+      </view>
+      <view class="p-title">{{item.title}}</view>
+      <view class="row between meta">
+        <view class="text2">{{item.author}}</view>
+        <view class="row meta-r">
+          <view class="text2">💬 {{item.reply_count}}</view>
+          <view class="text2 m-l">👁 {{item.view_count}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{posts.length === 0}}">
+      <view class="text2">暂无帖子，发第一帖试试</view>
+    </view>
+  </block>
+</view>

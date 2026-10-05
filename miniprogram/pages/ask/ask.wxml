@@ -1,0 +1,45 @@
+<view class="container">
+  <view class="topbar">
+    <view class="text2">余额 {{balance}} 积分</view>
+    <view class="clear" wx:if="{{msgs.length > 0}}" bindtap="onClear">清空</view>
+  </view>
+
+  <view class="text2" style="padding:0 24rpx 14rpx;color:#8a97a8;">🔒 你的提问仅自己可见，机构主不可见</view>
+
+  <scroll-view class="chat" scroll-y scroll-into-view="{{scrollInto}}" scroll-with-animation>
+    <view class="empty" wx:if="{{msgs.length === 0}}">
+      <view class="empty-t">💬 财税AI问答</view>
+      <view class="empty-s">直接提问，可连续追问。有政策依据会标注文号；没有则会如实说明。</view>
+      <view class="chip" bindtap="onQuick" data-q="小规模纳税人月销售额多少以内免征增值税？">小规模纳税人免征额是多少？</view>
+      <view class="chip" bindtap="onQuick" data-q="现在针对小微企业有什么优惠？">小微企业有什么优惠？</view>
+      <view class="chip" bindtap="onQuick" data-q="公司注销要走什么流程？">公司注销要走什么流程？</view>
+    </view>
+
+    <block wx:for="{{msgs}}" wx:key="index" wx:for-item="m" wx:for-index="idx">
+      <view class="msg {{m.role}}" id="m{{idx}}">
+        <view wx:if="{{m.role === 'me'}}" class="bubble me-b">{{m.text}}</view>
+        <view wx:else class="bubble ai-b">
+          <view class="row between badge-row">
+            <view class="badge {{m.mode === 'deep_llm' ? 'badge-blue' : (m.mode === 'deep_llm_general' ? 'badge-yellow' : 'badge-gray')}}">
+              {{m.mode === 'deep_llm' ? '🤖 大模型 · 有政策依据' : (m.mode === 'deep_llm_general' ? '💡 一般性说明 · 无政策依据' : '📋 规则引擎检索')}}
+            </view>
+            <view class="text2" wx:if="{{m.cost}}">消耗 {{m.cost}} 积分</view>
+          </view>
+          <view class="answer">{{m.text}}</view>
+          <view class="ref-block" wx:if="{{m.refs.length > 0}}">
+            <view class="ref-title">📌 政策依据</view>
+            <view class="ref-item" wx:for="{{m.refs}}" wx:for-item="r" wx:key="*this">{{r}}</view>
+          </view>
+        </view>
+      </view>
+    </block>
+    <view id="m{{msgs.length}}" style="height:2rpx;"></view>
+    <view style="height:20rpx;"></view>
+  </scroll-view>
+
+  <view class="inputbar">
+    <input class="q" placeholder="继续追问…" placeholder-class="ph" value="{{question}}"
+      bindinput="onInput" confirm-type="send" bindconfirm="onSubmit" />
+    <button class="send" size="mini" loading="{{loading}}" bindtap="onSubmit">发送</button>
+  </view>
+</view>

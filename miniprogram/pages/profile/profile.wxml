@@ -1,0 +1,45 @@
+<view class="container">
+  <view class="card profile-head">
+    <view class="avatar">👤</view>
+    <view class="p-info">
+      <view class="p-name">数字财税用户</view>
+      <view class="text2 p-openid" bindtap="onCopyOpenid">openid: {{openid || '未初始化'}}（点击复制）</view>
+    </view>
+  </view>
+
+  <view class="card stat-row">
+    <view class="stat">
+      <view class="stat-num">{{balance}}</view>
+      <view class="text2">积分</view>
+    </view>
+    <view class="stat">
+      <view class="stat-num">L{{level}}</view>
+      <view class="text2">等级</view>
+    </view>
+    <view class="stat">
+      <view class="stat-num">{{inviteCode ? '已生成' : '—'}}</view>
+      <view class="text2">邀请码</view>
+    </view>
+  </view>
+
+  <view class="card menu" bindtap="onGoPoints">
+    <view class="menu-item row between">
+      <view>💎 我的积分</view>
+      <view class="text2">›</view>
+    </view>
+  </view>
+
+  <view class="card menu" bindtap="onGoKefu">
+    <view class="menu-item row between">
+      <view>📞 联系客服 / 充值</view>
+      <view class="text2">›</view>
+    </view>
+  </view>
+
+  <view class="card menu" bindtap="onAbout">
+    <view class="menu-item row between">
+      <view>ℹ️ 关于</view>
+      <view class="text2">›</view>
+    </view>
+  </view>
+</view>

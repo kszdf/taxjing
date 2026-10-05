@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>税镜 · 生产部署安全前置与上线分步清单</title>
+<style>
+  :root { --bg:#f7f8fa; --card:#fff; --ink:#1f2933; --sub:#5b6775; --line:#e3e8ef; --brand:#1f6feb; --ok:#0a8a4a; --warn:#b9530a; --bad:#c0392b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+  .wrap { max-width:920px; margin:0 auto; padding:32px 20px 64px; }
+  h1 { font-size:24px; margin:0 0 6px; }
+  h2 { font-size:19px; margin:34px 0 12px; border-left:4px solid var(--brand); padding-left:10px; }
+  .lead { color:var(--sub); margin:0 0 18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin:14px 0; }
+  .tag { display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; color:#fff; vertical-align:middle; }
+  .t-done { background:var(--ok); } .t-you { background:var(--brand); } .t-warn { background:var(--warn); }
+  code { background:#eef1f5; padding:2px 6px; border-radius:5px; font-size:13px; color:#173a6b; }
+  pre { background:#0f1420; color:#e6edf3; padding:14px 16px; border-radius:10px; overflow:auto; font-size:13px; line-height:1.5; }
+  pre .c { color:#7d8da3; }
+  .step { display:flex; gap:12px; padding:12px 0; border-bottom:1px dashed var(--line); }
+  .step:last-child { border-bottom:none; }
+  .step input { margin-top:5px; width:18px; height:18px; flex:0 0 auto; }
+  .step .body { flex:1; }
+  .step b { color:var(--ink); }
+  .muted { color:var(--sub); font-size:13px; }
+  .alert { background:#fff6ec; border:1px solid #f3d3a6; color:#7a4a12; border-radius:10px; padding:14px 16px; margin:14px 0; }
+  .kbd { background:#fff; border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:1px 7px; font-size:12px; }
+  footer { color:var(--sub); font-size:12px; margin-top:30px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>税镜 · 生产部署安全前置与上线分步清单</h1>
+  <p class="lead">上线＝把系统从「本地随便跑」变成「公网正式服务」之前，必须先堵住的几道门。本清单分两层：<b>代码侧（已替你做）</b> 与 <b>你/平台侧（需你操作）</b>。</p>
+
+  <div class="card">
+    <h2 style="margin-top:4px">一、概念：什么是"安全前置项"</h2>
+    <p class="muted">公网可达的 <code>tax.hgtcs.com</code> 任何人都能直接打你的 API。开发期为省事留的"方便后门"，上线即风险。主要有三类：</p>
+    <ul>
+      <li><b>弱口令 / 空口令</b>：运营后台、定时任务令牌若用默认值，等于把钥匙挂公网。</li>
+      <li><b>无来源限制</b>：仅靠静态 token 的高危接口（运营后台、定时触发）任何人带对 token 就能调。</li>
+      <li><b>密钥缺失</b>：微信 AppSecret、订阅模板、企微参数未配置，功能失效或暴露默认值。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:4px">二、代码侧（已做，你不用动）<span class="tag t-done">已完成·本地验证全过</span></h2>
+    <ul>
+      <li>token 生产强制：<code>APP_ENV=production</code> 且未设强 token 时，服务启动即 <code>sys.exit(1)</code> 拒绝运行（杜绝弱口令上线）。</li>
+      <li>来源 IP 白名单网关：<code>_gate_sensitive()</code> 拦截 <code>/api/admin/</code> 与 <code>/api/cron/</code>，默认仅本机；支持反代下读真实 IP。</li>
+      <li><code>admin_authorized</code> 空口令防护：空 token 直接拒绝，防"空==空"绕过。</li>
+      <li>零依赖 <code>.env</code> 加载：密钥不硬编码进源码，附 <code>.env.example</code> 模板。</li>
+    </ul>
+    <p class="muted">架构提醒：生产经 nginx 反代，后端看到的来源是 nginx 本机。要让 IP 白名单真正生效，必须配 <code>TRUST_PROXY=1</code> + nginx <b>覆盖式</b>注入 X-Forwarded-For；更稳的做法是<b>在 nginx 层直接对 <code>/api/admin/</code> 做 allow/deny</b>（见第 5 步）。</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:4px">三、你需要做的（分步勾选）</h2>
+
+    <div class="step"><input type="checkbox"><div class="body">
+      <b>第 1 步 · 生成两个强随机令牌</b><br>
+      <span class="muted">在你的电脑或服务器上运行，各生成一次，复制保存好：</span>
+      <pre><span class="c"># 生成 ADMIN_TOKEN 与 CRON_TOKEN（各跑一次）</span>
+python -c "import secrets; print(secrets.token_hex(24))"</pre>
+    </div></div>
+
+    <div class="step"><input type="checkbox"><div class="body">
+      <b>第 2 步 · 微信公众平台配置</b>（<span class="kbd">mp.weixin.qq.com</span>）<br>
+      <span class="muted">登录小程序后台 → <b>开发 → 开发设置 → 服务器域名</b>，request 合法域名加 <code>https://tax.hgtcs.com</code>；<br>
+      开发设置里复制 <b>AppSecret</b>（即 <code>WX_APPSECRET</code>，AppID 已是 <code>wx1dbe0f380c108b9f</code>）；<br>
+      <b>功能 → 订阅消息 → 一次性订阅</b>，申请"征期/申报提醒"类模板，拿到 <b>模板 ID</b>（即 <code>WX_SUBSCRIBE_TMPL_ID</code>）。</span>
+    </div></div>
+
+    <div class="step"><input type="checkbox"><div class="body">
+      <b>第 3 步 · 企微客服参数（可选，不配则前端降级提示）</b><br>
+      <span class="muted">企微管理后台拿 <code>WX_CORPID</code>，生成客服二维码图，配置 <code>WX_KEFU_QR</code> 图片地址。</span>
+    </div></div>
+
+    <div class="step"><input type="checkbox"><div class="body">
+      <b>第 4 步 · 生产服务器部署</b>（<code>124.222.33.233</code>）<br>
+      <span class="muted">① 把本地代码同步到 <code>/opt/suijing</code>（server.py / miniprogram / admin.html / org.html / db / scripts / .env）；<br>
+      ② 在服务器建 <code>/opt/suijing/.env</code>，填入：</span>
+      <pre>APP_ENV=production
+ADMIN_TOKEN=<span class="c"># 第1步生成</span>
+CRON_TOKEN=<span class="c"># 第1步生成</span>
+WX_APPSECRET=<span class="c"># 第2步</span>
+WX_SUBSCRIBE_TMPL_ID=<span class="c"># 第2步模板ID</span>
+ADMIN_ALLOWED_IPS=127.0.0.1,<span class="c">你的办公出口IP</span>
+TRUST_PROXY=1
+LLM_API_KEY=<span class="c"># 大模型KEY（不配则AI问答走规则兜底）</span>
+WX_CORPID=<span class="c"># 第3步，可选</span>
+WX_KEFU_QR=<span class="c"># 第3步，可选</span></pre>
+      <span class="muted">③ systemd 已支持自动读 <code>.env</code>，无需改 service 文件；④ <code>systemctl daemon-reload && systemctl restart suijing</code>。</span>
+    </div></div>
+
+    <div class="step"><input type="checkbox"><div class="body">
+      <b>第 5 步 · nginx 配置（关键硬防线）</b><br>
+      <span class="muted">在反代 server 块里：对运营接口做 IP 限制，并<b>覆盖式</b>注入 X-Forwarded-For（保证后端拿到真实来源）：</span>
+      <pre>location /api/admin/ {
+    allow 127.0.0.1;
+    allow <span class="c">你的办公出口IP</span>;
+    deny all;
+    proxy_pass http://127.0.0.1:8090;
+}
+location / {
+    proxy_pass http://127.0.0.1:8090;
+    <span class="c"># 覆盖式（不是 $proxy_add_x_forwarded_for）才可信：</span>
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header Host $host;
+}</pre>
+      <span class="muted">改完 <code>nginx -t && systemctl reload nginx</code>。</span>
+    </div></div>
+
+    <div class="step"><input type="checkbox"><div class="body">
+      <b>第 6 步 · 验证上线</b><br>
+      <span class="muted">① 公网打 <code>https://tax.hgtcs.com/api/admin/community/list</code>（非白名单 IP / 无 token → 返回 <code>forbidden</code> 或 403）；<br>
+      ② 小程序真机预览：问答 / 同行问 / 征期日历；<br>
+      ③ 征期页点"开启提醒"→ 微信授权 → 查生产库 <code>user_subscription</code> 表应有 active 记录；<br>
+      ④ 加 systemd timer 每日调 <code>/api/cron/push-deadlines</code>（带 <code>X-Cron-Token</code> 或 <code>X-Admin-Token</code>）。</span>
+    </div></div>
+  </div>
+
+  <div class="alert">
+    <b>⚠️ 上线前铁律</b>：第 2 步合法域名、第 4 步强 token、第 5 步 nginx allow/deny —— 缺一不可。少任何一项都不算"安全前置已补齐"，先别开放公网注册。
+  </div>
+
+  <footer>税镜 · 慧根堂财税AI智库 · 部署指南（代码侧安全加固已于 2026-09-13 完成并通过本地验证）</footer>
+</div>
+</body>
+</html>

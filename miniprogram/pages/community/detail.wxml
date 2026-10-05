@@ -1,0 +1,118 @@
+<view class="container">
+  <view class="card" wx:if="{{loading}}">
+    <view class="text2">加载中…</view>
+  </view>
+
+  <block wx:if="{{!loading && post}}">
+    <!-- 帖子正文 -->
+    <view class="card">
+      <view class="row between">
+        <view class="row">
+          <view class="tag scene">{{post.scene_tag}}</view>
+          <view class="tag ok" wx:if="{{post.status === 'accepted'}}">已解决</view>
+          <view class="tag bounty" wx:if="{{post.bounty_points > 0}}">🎯 悬赏{{post.bounty_points}}</view>
+        </view>
+        <view class="text2 time">{{post.created_at}}</view>
+      </view>
+      <view class="p-title">{{post.title}}</view>
+      <view class="p-content">{{post.content}}</view>
+      <view class="row between meta">
+        <view class="text2">{{post.author}} · 👁 {{post.view_count}}</view>
+      </view>
+    </view>
+
+    <!-- AI 参考答案 -->
+    <view class="card ai-card">
+      <view class="row between">
+        <view class="block-title">🤖 政策参考（AI生成·仅供参考）</view>
+        <view class="text2 refresh" bindtap="onRefreshAi" wx:if="{{aiLoading}}">刷新看看 ›</view>
+      </view>
+      <view class="text2 ai-sub">AI 按现行政策生成的答案，可作起点；最终以你的实务判断与当地口径为准。</view>
+      <view class="text2" wx:if="{{aiLoading}}">AI 参考生成中，稍后刷新即可看到…</view>
+      <block wx:else>
+        <view class="ai-text">{{aiAnswer}}</view>
+        <view class="refs" wx:if="{{aiRefs.length > 0}}">
+          <view class="ref-chip" wx:for="{{aiRefs}}" wx:key="*this"
+                data-doc="{{item}}" bindtap="onRefTap">{{item}}</view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 同行回答 -->
+    <view class="section-title text2">同行回答（{{replies.length}}）</view>
+    <view class="text2 ai-sub" style="padding:0 4rpx 8rpx;">说说你实际怎么处理的：当地口径、踩过的坑、注意事项——这才是社区的差异化价值。</view>
+
+    <view class="card reply" wx:for="{{replies}}" wx:key="id">
+      <view class="row between">
+        <view class="row">
+          <view class="r-author">{{item.author}}</view>
+          <view class="r-rep">🏅 {{item.reputation}}</view>
+        </view>
+        <view class="row">
+          <view class="tag hot" wx:if="{{item.like_count >= 5 && !item.is_accepted}}">🔥 精华</view>
+          <view class="tag ok" wx:if="{{item.is_accepted}}">✓ 已被采纳</view>
+        </view>
+      </view>
+      <view class="r-content">{{item.content}}</view>
+      <view class="refs" wx:if="{{item.policy_refs.length > 0}}">
+        <view class="ref-chip" wx:for="{{item.policy_refs}}" wx:for-item="doc" wx:key="*this"
+              data-doc="{{doc}}" bindtap="onRefTap">{{doc}}</view>
+      </view>
+      <view class="row between r-foot">
+        <view class="text2 time">{{item.created_at}}</view>
+        <view class="row r-actions">
+          <view class="like {{item.liked ? 'liked' : ''}}" data-id="{{item.id}}" bindtap="onLikeTap">
+            👍 {{item.like_count}}
+          </view>
+          <view class="accept-btn" wx:if="{{isOwner && post.status !== 'accepted' && !item.is_accepted}}"
+                data-id="{{item.id}}" bindtap="onAcceptTap">采纳</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{replies.length === 0}}">
+      <view class="text2">还没有同行回答，来抢首答</view>
+    </view>
+
+    <!-- 回复框 -->
+    <view class="card">
+      <view class="block-title">写下你的经验</view>
+      <textarea class="input" placeholder="补充实战经验、当地口径或注意事项（1500字内）"
+        placeholder-class="ph" value="{{replyContent}}" bindinput="onReplyInput" maxlength="1500" />
+
+      <!-- 已选政策引用 -->
+      <view class="refs" wx:if="{{selRefs.length > 0}}">
+        <view class="ref-chip sel" wx:for="{{selRefs}}" wx:key="*this"
+              data-doc="{{item}}" bindtap="onRemoveRef">{{item}} ✕</view>
+      </view>
+
+      <view class="row between form-foot">
+        <view class="blue pick-btn" bindtap="onTogglePicker">
+          {{showPicker ? '收起政策搜索' : '📎 引用政策'}}
+        </view>
+        <button class="btn submit-btn" size="mini" loading="{{submitting}}" bindtap="onSubmitReply">提交回答</button>
+      </view>
+
+      <!-- 政策搜索选择器 -->
+      <view class="picker-box" wx:if="{{showPicker}}">
+        <view class="row search-row">
+          <input class="search-input" placeholder="搜文号/关键词，如：2026年第10号"
+            placeholder-class="ph" value="{{searchQ}}" bindinput="onSearchInput" />
+          <view class="btn mini-search" bindtap="onDoSearch">搜索</view>
+        </view>
+        <view class="text2 tip-line">仅可选到库内现行有效文件，点击切换选中</view>
+        <view class="s-item {{selRefs.indexOf(s.doc_number) >= 0 ? 's-on' : ''}}"
+              wx:for="{{searchResults}}" wx:key="doc_number"
+              data-doc="{{s.doc_number}}" bindtap="onPickRef">
+          <view class="s-doc">{{s.doc_number || '（无文号）'}}</view>
+          <view class="text2 s-title">{{s.title}}</view>
+          <view class="text2 s-status">{{s.status_label}}</view>
+        </view>
+        <view class="text2 tip-line" wx:if="{{searchResults.length === 0}}">输入关键词后点搜索</view>
+      </view>
+    </view>
+
+    <!-- 免责声明（系统层下发，前端不可关闭） -->
+    <view class="disclaimer">{{disclaimer}}</view>
+  </block>
+</view>

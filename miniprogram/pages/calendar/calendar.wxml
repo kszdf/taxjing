@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="header">
+    <view class="h-title">📅 征期日历</view>
+    <view class="h-sub">临近的申报 / 缴款 / 年报节点，提前安排不逾期</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading">加载中…</view>
+
+  <view wx:elif="{{deadlines.length === 0}}" class="empty">
+    近期暂无征期节点
+  </view>
+
+  <view wx:else>
+    <view class="tip privacy-note">
+      <block wx:if="{{subscribe_tmpl_id}}">
+        <text>🔔 开启后，申报期前 3 天自动提醒</text>
+        <button class="sub-btn" size="mini" bindtap="onSubscribe">{{subscribed ? '已开启 ✓' : '开启征期提醒'}}</button>
+      </block>
+      <block wx:else>
+        <text>🔔 征期订阅提醒（模板配置后上线）</text>
+      </block>
+    </view>
+    <view wx:for="{{deadlines}}" wx:key="due" class="card {{item.level}}">
+      <view class="row between">
+        <view class="d-name">{{item.name}}</view>
+        <view class="d-badge {{item.level}}">{{item.days_text}}</view>
+      </view>
+      <view class="d-period">{{item.period}}</view>
+      <view class="d-due">截止：{{item.due}}</view>
+      <view class="d-note">{{item.note}}</view>
+    </view>
+  </view>
+
+  <view class="footer-note">数据按通用征期规则生成，具体以主管税务机关通知及节假日顺延为准。</view>
+</view>

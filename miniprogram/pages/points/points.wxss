@@ -1,0 +1,9 @@
+.big-balance { text-align: center; }
+.b-num { font-size: 72rpx; font-weight: bold; color: #388bfd; margin: 16rpx 0; }
+.stat-grid { display: flex; }
+.stat { flex: 1; text-align: center; }
+.stat-num { font-size: 40rpx; font-weight: bold; color: #3fb950; }
+.invite-code { font-size: 36rpx; color: #e6edf3; margin-top: 10rpx; font-weight: bold; }
+.btn.small { padding: 12rpx 32rpx; font-size: 26rpx; }
+.get-card { margin-top: 8rpx; }
+.get-tip { margin-top: 12rpx; }

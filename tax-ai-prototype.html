@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>慧根堂·财税AI智库 小程序原型</title>
+<style>
+  :root{
+    --primary:#165D9C; --primary-d:#0F4A7E; --gold:#C8A35B; --gold-l:#F3E9D6;
+    --bg:#F4F5F7; --card:#FFFFFF; --ink:#1F2329; --sub:#8A9099; --line:#ECEEF1;
+    --ok:#2BA471; --warn:#E37318; --dead:#BFC4CC; --dead-bg:#F2F3F5;
+    --ai:#EAF3FB; --shadow:0 2px 12px rgba(22,93,156,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#E9ECF1;display:flex;justify-content:center;padding:24px;color:var(--ink);}
+  .phone{width:390px;height:840px;background:var(--bg);border-radius:38px;
+    box-shadow:0 20px 60px rgba(0,0,0,.22);overflow:hidden;position:relative;display:flex;flex-direction:column;border:10px solid #1c1f24;}
+  .statusbar{height:44px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:13px;font-weight:600;}
+  .statusbar .dots{display:flex;gap:4px;}
+  .statusbar .dots i{width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block;opacity:.9;}
+  .nav{height:50px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;position:relative;}
+  .nav .back{position:absolute;left:14px;font-size:22px;font-weight:400;}
+  .screen{flex:1;overflow-y:auto;padding:14px 14px 0;display:none;}
+  .screen.active{display:block;}
+  .screen::-webkit-scrollbar{width:0;}
+  /* 通用卡片 */
+  .card{background:var(--card);border-radius:14px;padding:14px;box-shadow:var(--shadow);margin-bottom:12px;}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--gold-l);color:var(--primary-d);font-weight:600;}
+  .tag.ok{background:#E6F6EE;color:var(--ok);}
+  .tag.warn{background:#FCEFDD;color:var(--warn);}
+  .tag.dead{background:var(--dead-bg);color:#9aa0a8;}
+  .muted{color:var(--sub);font-size:12px;}
+  /* 首页 */
+  .brand{background:linear-gradient(135deg,var(--primary),var(--primary-d));border-radius:16px;padding:16px;color:#fff;margin-bottom:12px;box-shadow:var(--shadow);}
+  .brand .t1{font-size:18px;font-weight:700;letter-spacing:1px;}
+  .brand .t2{font-size:12px;opacity:.85;margin-top:3px;}
+  .brand .row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+  .brand .coin{background:rgba(255,255,255,.16);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:600;}
+  .brand .coin b{color:var(--gold-l);}
+  .search{background:#fff;border-radius:24px;padding:11px 16px;display:flex;align-items:center;gap:8px;color:var(--sub);font-size:14px;box-shadow:var(--shadow);margin-bottom:12px;}
+  .ai-entry{background:linear-gradient(135deg,#1E6FB8,#165D9C);border-radius:16px;padding:16px;color:#fff;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow);margin-bottom:12px;cursor:pointer;}
+  .ai-entry .ico{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:24px;}
+  .ai-entry .t{font-size:15px;font-weight:700;}
+  .ai-entry .s{font-size:12px;opacity:.85;margin-top:2px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+  .gitem{background:#fff;border-radius:12px;padding:12px 6px;text-align:center;box-shadow:var(--shadow);}
+  .gitem .ic{font-size:22px;}
+  .gitem .lb{font-size:11px;color:var(--sub);margin-top:5px;}
+  .sec-title{font-size:15px;font-weight:700;margin:4px 2px 10px;display:flex;justify-content:space-between;align-items:center;}
+  .sec-title .more{font-size:12px;color:var(--sub);font-weight:400;}
+  .dyn{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .dyn:last-child{border-bottom:none;}
+  .dyn .av{width:26px;height:26px;border-radius:50%;background:var(--ai);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+  .dyn .txt b{color:var(--primary);}
+  .dyn .live{margin-left:auto;font-size:11px;color:var(--ok);}
+  .invite{background:linear-gradient(135deg,#F3E9D6,#E8D9B8);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .invite .t{font-size:14px;font-weight:700;color:var(--primary-d);}
+  .invite .s{font-size:11px;color:#8a6d3b;margin-top:2px;}
+  .invite .btn{margin-left:auto;background:var(--primary);color:#fff;font-size:12px;padding:7px 14px;border-radius:20px;font-weight:600;}
+  /* 政策库 */
+  .tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:4px;}
+  .tabs::-webkit-scrollbar{height:0;}
+  .chip{white-space:nowrap;background:#fff;border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-size:13px;color:var(--sub);}
+  .chip.on{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .pol{background:#fff;border-radius:12px;padding:13px;box-shadow:var(--shadow);margin-bottom:10px;cursor:pointer;}
+  .pol .h{font-size:14px;font-weight:600;line-height:1.4;}
+  .pol .m{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;}
+  .pol .date{font-size:11px;color:var(--sub);margin-left:auto;}
+  /* 政策详情 - 条款级置灰 */
+  .detail-head{background:var(--primary);color:#fff;border-radius:14px;padding:16px;margin-bottom:12px;}
+  .detail-head .h{font-size:16px;font-weight:700;}
+  .detail-head .m{font-size:12px;opacity:.85;margin-top:8px;line-height:1.6;}
+  .clause{padding:13px 0;border-bottom:1px solid var(--line);}
+  .clause:last-child{border-bottom:none;}
+  .clause .ct{font-size:13px;font-weight:600;margin-bottom:4px;}
+  .clause .cb{font-size:13px;color:#3c4248;line-height:1.65;}
+  .clause.dead{opacity:1;}
+  .clause.dead .ct{color:#9aa0a8;text-decoration:line-through;}
+  .clause.dead .cb{color:#aeb3ba;background:var(--dead-bg);padding:8px 10px;border-radius:8px;}
+  .dead-note{display:flex;align-items:center;gap:6px;font-size:11px;color:#9aa0a8;margin-top:6px;}
+  .dead-note .x{background:#d9dde2;color:#7a8089;border-radius:4px;padding:1px 5px;font-weight:700;}
+  .live-note{font-size:11px;color:var(--warn);background:#FCEFDD;padding:6px 10px;border-radius:8px;margin-top:10px;line-height:1.5;}
+  /* 专家 */
+  .exp{display:flex;gap:12px;align-items:center;background:#fff;border-radius:14px;padding:14px;box-shadow:var(--shadow);margin-bottom:12px;}
+  .exp .av{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#b88a3e);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0;}
+  .exp .nm{font-size:15px;font-weight:700;}
+  .exp .ds{font-size:12px;color:var(--sub);margin-top:3px;line-height:1.5;}
+  .exp .exp-tag{font-size:11px;color:var(--primary);background:var(--ai);padding:2px 8px;border-radius:10px;margin-top:6px;display:inline-block;}
+  .exp.coming{opacity:.92;}
+  .exp.coming .av{background:#eef0f3;color:#b3b9c0;}
+  .exp.coming .nm{color:var(--sub);}
+  .exp .apply{margin-left:auto;font-size:12px;color:var(--primary);border:1px solid var(--primary);border-radius:18px;padding:5px 12px;white-space:nowrap;}
+  .reward{background:#fff;border-radius:12px;padding:13px;box-shadow:var(--shadow);margin-bottom:10px;}
+  .reward .top{display:flex;align-items:center;gap:8px;}
+  .reward .q{font-size:13px;font-weight:600;line-height:1.4;}
+  .reward .cost{margin-left:auto;background:var(--gold-l);color:var(--primary-d);font-size:12px;font-weight:700;padding:3px 9px;border-radius:10px;}
+  .reward .bot{font-size:11px;color:var(--sub);margin-top:8px;display:flex;justify-content:space-between;}
+  /* 我的 */
+  .me-head{background:linear-gradient(135deg,var(--primary),var(--primary-d));border-radius:16px;padding:18px;color:#fff;margin-bottom:12px;}
+  .me-head .nm{font-size:17px;font-weight:700;}
+  .me-head .id{font-size:12px;opacity:.85;margin-top:3px;}
+  .me-head .coinrow{display:flex;gap:10px;margin-top:14px;}
+  .me-head .cbx{flex:1;background:rgba(255,255,255,.14);border-radius:12px;padding:10px;text-align:center;}
+  .me-head .cbx b{font-size:18px;color:var(--gold-l);}
+  .me-head .cbx span{display:block;font-size:11px;opacity:.85;margin-top:2px;}
+  .menu{background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px;}
+  .mitem{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--line);font-size:14px;}
+  .mitem:last-child{border-bottom:none;}
+  .mitem .ic{font-size:18px;width:22px;text-align:center;}
+  .mitem .ar{margin-left:auto;color:var(--sub);}
+  .invcode{background:#fff;border-radius:14px;padding:14px;box-shadow:var(--shadow);text-align:center;margin-bottom:12px;}
+  .invcode .c{font-size:20px;font-weight:700;letter-spacing:3px;color:var(--primary);}
+  .invcode .btn{background:var(--primary);color:#fff;border-radius:20px;padding:8px 22px;font-size:13px;font-weight:600;margin-top:10px;display:inline-block;}
+  /* 底部 tabbar */
+  .tabbar{height:62px;background:#fff;border-top:1px solid var(--line);display:flex;padding-bottom:6px;}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--sub);font-size:11px;cursor:pointer;}
+  .tab .ic{font-size:21px;}
+  .tab.on{color:var(--primary);font-weight:600;}
+  /* 聊天覆盖层 */
+  .chat{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:30;}
+  .chat.show{display:flex;}
+  .chat .nav{justify-content:flex-start;gap:8px;padding-left:8px;}
+  .chat .body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;}
+  .chat .body::-webkit-scrollbar{width:0;}
+  .msg{max-width:80%;font-size:13px;line-height:1.6;padding:10px 13px;border-radius:14px;}
+  .msg.u{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px;}
+  .msg.a{align-self:flex-start;background:#fff;box-shadow:var(--shadow);border-bottom-left-radius:4px;}
+  .msg.a .src{background:var(--ai);border-left:3px solid var(--primary);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:12px;line-height:1.5;}
+  .msg.a .src .sh{font-size:11px;color:var(--primary);font-weight:700;margin-bottom:3px;}
+  .msg.a .src .meta{color:var(--sub);font-size:11px;margin-top:4px;}
+  .chat .input{background:#fff;border-top:1px solid var(--line);padding:10px 12px;display:flex;gap:8px;align-items:center;}
+  .chat .input .box{flex:1;background:var(--bg);border-radius:20px;padding:9px 14px;font-size:13px;color:var(--sub);}
+  .chat .input .send{background:var(--primary);color:#fff;border-radius:20px;padding:9px 16px;font-size:13px;font-weight:600;}
+  .human-bar{background:#fff;border-top:1px solid var(--line);padding:12px;box-shadow:0 -2px 10px rgba(0,0,0,.05);}
+  .human-bar .btn{width:100%;background:linear-gradient(135deg,var(--gold),#b88a3e);color:#fff;border-radius:24px;padding:12px;text-align:center;font-size:14px;font-weight:700;}
+  .human-bar .note{text-align:center;font-size:11px;color:var(--sub);margin-top:6px;}
+  .demo-hint{position:absolute;bottom:70px;left:0;right:0;text-align:center;font-size:11px;color:var(--sub);background:rgba(255,255,255,.9);padding:4px;}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="statusbar"><span>9:41</span><span class="dots"><i></i><i></i><i></i></span></div>
+  <div class="nav"><span id="navTitle">慧根堂·财税AI智库</span></div>
+
+  <!-- ========== 首页 ========== -->
+  <div class="screen active" id="home">
+    <div class="brand">
+      <div class="t1">慧根堂 · 财税AI智库</div>
+      <div class="t2">最顶级的财税专家，7×24 在线答疑</div>
+      <div class="row">
+        <span style="font-size:12px;opacity:.9">我的积分</span>
+        <span style="display:flex;gap:8px;align-items:center">
+          <span class="coin">🔥 <b id="homePoints">32</b> 分</span>
+          <span onclick="openKefu()" style="background:var(--gold);color:#fff;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">获取</span>
+        </span>
+      </div>
+    </div>
+    <div class="search">🔍 搜索政策、案例、税务问题…</div>
+    <div class="ai-entry" onclick="openChat()">
+      <div class="ico">🤖</div>
+      <div><div class="t">AI 智能答疑</div><div class="s">输入问题，秒回带文号的权威答案</div></div>
+    </div>
+    <div class="grid">
+      <div class="gitem"><div class="ic">📚</div><div class="lb">政策库</div></div>
+      <div class="gitem"><div class="ic">⚠️</div><div class="lb">稽查案例</div></div>
+      <div class="gitem"><div class="ic">🧮</div><div class="lb">税负测算</div></div>
+      <div class="gitem"><div class="ic">🧾</div><div class="lb">发票查重</div></div>
+      <div class="gitem"><div class="ic">📝</div><div class="lb">合同审查</div></div>
+      <div class="gitem"><div class="ic">👤</div><div class="lb">专家答疑</div></div>
+    </div>
+    <div class="sec-title">实时咨询动态 <span class="more">不露金额 · 仅展示活跃</span></div>
+    <div class="card" style="padding-top:6px">
+      <div class="dyn"><span class="av">王</span><span class="txt"><b>王会计</b> 正在咨询 增值税进项抵扣</span><span class="live">● 进行中</span></div>
+      <div class="dyn"><span class="av">李</span><span class="txt"><b>李经理</b> 正在咨询 个税汇算清缴</span><span class="live">● 进行中</span></div>
+      <div class="dyn"><span class="av">陈</span><span class="txt"><b>陈老板</b> 正在咨询 社保基数调整</span><span class="live">● 进行中</span></div>
+      <div class="dyn"><span class="av">张</span><span class="txt"><b>张总</b> 专家答疑已完成</span><span class="live" style="color:var(--sub)">✓</span></div>
+    </div>
+    <div class="invite">
+      <div><div class="t">邀请同行，双方得积分</div><div class="s">每邀 1 人，各得 10 次问答额度</div></div>
+      <div class="btn" onclick="goTab('me')">去邀请</div>
+    </div>
+  </div>
+
+  <!-- ========== 政策库 ========== -->
+  <div class="screen" id="policy">
+    <div class="search">🔍 搜政策文号 / 关键词</div>
+    <div class="tabs">
+      <div class="chip on">全部</div><div class="chip">增值税</div><div class="chip">企业所得税</div>
+      <div class="chip">个税</div><div class="chip">社保</div><div class="chip">征管</div><div class="chip">稽查</div><div class="chip">地方口径</div>
+    </div>
+    <div class="pol" onclick="openDetail()">
+      <div class="h">财政部 税务总局关于明确增值税小规模纳税人减免政策的公告</div>
+      <div class="m"><span class="tag ok">现行有效</span><span class="tag">增值税</span><span class="date">财政部 税务总局公告2023年第19号</span></div>
+    </div>
+    <div class="pol" onclick="openDetail()">
+      <div class="h">国家税务总局关于小规模纳税人免征增值税政策有关征管问题的公告</div>
+      <div class="m"><span class="tag warn">部分条款失效</span><span class="tag">增值税·征管</span><span class="date">国家税务总局公告2019年第4号</span></div>
+    </div>
+    <div class="pol" onclick="openDetail()">
+      <div class="h">企业所得税税前扣除凭证管理办法</div>
+      <div class="m"><span class="tag ok">现行有效</span><span class="tag">企业所得税</span><span class="date">国家税务总局公告2018年第28号</span></div>
+    </div>
+    <div class="pol" onclick="openDetail()">
+      <div class="h">关于个人取得有关收入适用个人所得税应税所得项目的公告</div>
+      <div class="m"><span class="tag ok">现行有效</span><span class="tag">个税</span><span class="date">财政部 税务总局公告2019年第74号</span></div>
+    </div>
+  </div>
+
+  <!-- ========== 政策详情（含条款级置灰） ========== -->
+  <div class="screen" id="detail">
+    <div class="detail-head">
+      <div class="h">国家税务总局公告2019年第4号</div>
+      <div class="m">国家税务总局关于小规模纳税人免征增值税政策有关征管问题的公告<br>施行日期：2019-01-01 ｜ 效力：部分条款已废止</div>
+    </div>
+    <div class="card">
+      <div class="clause">
+        <div class="ct">第一条</div>
+        <div class="cb">小规模纳税人发生增值税应税销售行为，合计月销售额未超过10万元的，免征增值税。</div>
+      </div>
+      <div class="clause dead">
+        <div class="ct">第二条（已失效）</div>
+        <div class="cb">原规定：小规模纳税人月销售额不超过3万元（按季9万元）免征增值税。</div>
+        <div class="dead-note"><span class="x">废止</span>本条已被《财政部 税务总局公告2023年第19号》自2023-01-01起废止，现行标准为月10万元／季30万元。</div>
+      </div>
+      <div class="clause">
+        <div class="ct">第三条</div>
+        <div class="cb">按固定期限纳税的小规模纳税人可以选择以1个月或1个季度为纳税期限，一经选择，一个会计年度内不得变更。</div>
+      </div>
+      <div class="clause dead">
+        <div class="ct">第四条（已失效）</div>
+        <div class="cb">原规定：其他个人采取预收款形式出租不动产，取得的租金收入可在对应租赁期内平均分摊，分摊后月租金不超过3万元的，可享受小微企业免征增值税优惠。</div>
+        <div class="dead-note"><span class="x">废止</span>本条已被《国家税务总局公告2023年第1号》修订，不动产出租分摊口径已调整。</div>
+      </div>
+      <div class="live-note">⚠️ 提示：本文件第二条、第四条已失效，AI 回答将自动按最新有效政策（2023年第19号等）作答，灰色条款仅作历史参考，不参与答案生成。</div>
+    </div>
+  </div>
+
+  <!-- ========== 案例库 ========== -->
+  <div class="screen" id="case">
+    <div class="tabs">
+      <div class="chip on">稽查处罚</div><div class="chip">典型风险</div><div class="chip">行业案例</div><div class="chip">本地·昆山</div>
+    </div>
+    <div class="pol">
+      <div class="h">某制造企业虚开增值税专用发票被查，追缴税款并处罚款 2249.75 万元</div>
+      <div class="m"><span class="tag warn">稽查处罚</span><span class="tag">虚开发票</span><span class="date">2026-07 通报</span></div>
+    </div>
+    <div class="pol">
+      <div class="h">某电商企业隐匿收入被认定偷税，补税+滞纳金+罚款合计 386 万元</div>
+      <div class="m"><span class="tag warn">稽查处罚</span><span class="tag">电商·隐匿收入</span><span class="date">2026-06 通报</span></div>
+    </div>
+    <div class="pol">
+      <div class="h">建筑劳务分包个税代扣代缴风险点解析（昆山本地口径）</div>
+      <div class="m"><span class="tag ok">风险预警</span><span class="tag">建筑·本地</span><span class="date">慧根堂解读</span></div>
+    </div>
+  </div>
+
+  <!-- ========== 专家答疑（初期仅入口，不展示专家卡/悬赏） ========== -->
+  <div class="screen" id="expert">
+    <div class="brand" style="background:linear-gradient(135deg,#165D9C,#0F4A7E)">
+      <div class="t1">专家答疑</div>
+      <div class="t2">由税务服务数十年的资深专家为您一对一解答</div>
+    </div>
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;color:var(--primary);margin-bottom:4px">服务说明</div>
+      <div class="dyn" style="border:none;padding:9px 0"><span class="av" style="background:var(--ai);color:var(--primary)">⏱</span><span class="txt">响应时间：工作日 9:00–18:00，通常当日回复</span></div>
+      <div class="dyn" style="border:none;padding:9px 0"><span class="av" style="background:var(--ai);color:var(--primary)">💎</span><span class="txt">计费：单点问题统一 <b>30 积分</b>（≈¥30），积分不足可联系客服购买</span></div>
+      <div class="dyn" style="border:none;padding:9px 0"><span class="av" style="background:var(--ai);color:var(--primary)">📋</span><span class="txt">复杂事项（筹划/稽查/股权/注销）将引导至深度咨询</span></div>
+    </div>
+    <div class="ai-entry" style="background:linear-gradient(135deg,#C8A35B,#b88a3e)" onclick="openChat()">
+      <div class="ico">💬</div>
+      <div><div class="t">发起专家答疑</div><div class="s">描述问题，AI 先答；需人工时一键转专家</div></div>
+    </div>
+    <div class="muted" style="text-align:center;padding:12px 16px 20px;line-height:1.7">
+      专家答疑仅供参考，正式税务意见以主管税务机关口径及签约委托为准。
+    </div>
+  </div>
+
+  <!-- ========== 我的 ========== -->
+  <div class="screen" id="me">
+    <div class="me-head">
+      <div class="nm">张德富 · 张老师</div>
+      <div class="id">慧根堂 · 财税AI智库 会员</div>
+      <div class="coinrow">
+        <div class="cbx"><b id="mePoints">32</b><span>我的积分</span></div>
+        <div class="cbx"><b id="meLevel">免费版</b><span>会员状态</span></div>
+        <div class="cbx"><b id="meInvites">3</b><span>我邀请的人</span></div>
+      </div>
+    </div>
+    <div class="invcode">
+      <div class="muted">我的专属邀请码</div>
+      <div class="c" id="invCode">HG-TAX-8821</div>
+      <div class="btn" onclick="alert('已复制邀请海报，去微信发给同行吧')">生成邀请海报</div>
+    </div>
+    <div class="card" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#F3E9D6,#E8D9B8);box-shadow:none;cursor:pointer" onclick="openKefu()">
+      <div style="font-size:24px">💎</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--primary-d)">获取积分 / 购买积分包</div>
+        <div style="font-size:11px;color:#8a6d3b;margin-top:2px">积分与人民币 1:1 等值，可抵专家服务费（购买方式见客服）</div>
+      </div>
+      <div style="background:var(--primary);color:#fff;border-radius:18px;padding:7px 14px;font-size:12px;font-weight:600">去获取</div>
+    </div>
+    <div class="menu">
+      <div class="mitem" onclick="openMyPosts()"><span class="ic">💬</span>我的提问<span class="ar">›</span></div>
+      <div class="mitem" onclick="openMyCollect()"><span class="ic">⭐</span>我的收藏<span class="ar">›</span></div>
+      <div class="mitem" onclick="openPoints()"><span class="ic">📊</span>积分明细<span class="ar">›</span></div>
+      <div class="mitem"><span class="ic">👥</span>我的邀请关系<span class="ar">›</span></div>
+      <div class="mitem"><span class="ic">💎</span>会员与权益<span class="ar">›</span></div>
+    </div>
+    <div class="menu">
+      <div class="mitem" onclick="openKefu()"><span class="ic">🛎️</span>联系客服 · 购买积分 / 深度咨询<span class="ar">›</span></div>
+      <div class="mitem"><span class="ic">⚙️</span>设置与隐私<span class="ar">›</span></div>
+    </div>
+  </div>
+
+  <!-- ========== 我的问题 ========== -->
+  <div class="screen" id="myposts">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <span style="font-size:22px;cursor:pointer;color:var(--primary)" onclick="goTab('me')">‹</span>
+      <span style="font-size:16px;font-weight:700;color:var(--primary)">我的问题</span>
+    </div>
+    <div class="tabs" style="margin-bottom:10px">
+      <div class="chip on">全部</div><div class="chip">AI已答</div><div class="chip">人工解答</div><div class="chip">深度咨询</div>
+    </div>
+    <div class="card">
+      <div class="dyn" style="border:none;padding:8px 0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">小规模纳税人季度30万内免增值税怎么算？</div>
+          <div class="muted" style="margin-top:4px">AI智能问答 · 消耗 0 积分（免费配额） · 2026-09-09</div>
+        </div>
+        <span class="tag ok">已解答</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="dyn" style="border:none;padding:8px 0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">跨年取得的发票能否在当年税前扣除？</div>
+          <div class="muted" style="margin-top:4px">人工快答（张老师） · 消耗 30 积分 · 2026-09-08</div>
+        </div>
+        <span class="tag">已解答</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="dyn" style="border:none;padding:8px 0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">公司股权转让架构怎么设计更省税？</div>
+          <div class="muted" style="margin-top:4px">已转深度咨询 · 企微对接中 · 2026-09-05</div>
+        </div>
+        <span class="tag warn">L3</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="dyn" style="border:none;padding:8px 0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">建筑劳务分包自然人代开发票个税由谁扣？</div>
+          <div class="muted" style="margin-top:4px">积分悬赏 · 待专家接单 · 2026-09-07</div>
+        </div>
+        <span class="tag">悬赏中</span>
+      </div>
+    </div>
+    <div id="postsLive" style="font-size:12px;color:var(--primary);line-height:1.9;padding:12px 2px"></div>
+  </div>
+
+  <!-- ========== 我的收藏 ========== -->
+  <div class="screen" id="mycollect">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <span style="font-size:22px;cursor:pointer;color:var(--primary)" onclick="goTab('me')">‹</span>
+      <span style="font-size:16px;font-weight:700;color:var(--primary)">我的收藏</span>
+    </div>
+    <div class="tabs" style="margin-bottom:10px">
+      <div class="chip on">全部</div><div class="chip">政策</div><div class="chip">案例</div><div class="chip">问答</div><div class="chip">模板</div>
+    </div>
+    <div class="card">
+      <div class="dyn" style="border:none;padding:8px 0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">财政部 税务总局公告2023年第19号（小规模纳税人减免）</div>
+          <div class="muted" style="margin-top:4px">政策 · 收藏于 2026-08-20 · 状态：现行有效</div>
+        </div>
+        <span class="tag ok">有效</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="dyn" style="border:none;padding:8px 0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">国家税务总局公告2019年第4号（征管问题）</div>
+          <div class="muted" style="margin-top:4px">政策 · 收藏于 2026-07-12 · 回访提示：第二条已废止</div>
+        </div>
+        <span class="tag warn">部分失效</span>
+      </div>
+      <div class="dead-note" style="margin-top:6px"><span class="x">提示</span>该文件第二、四条已被新公告废止，回看时已置灰提示，AI 不会引用失效条款。</div>
+    </div>
+    <div class="card">
+      <div class="dyn" style="border:none;padding:8px 0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">某制造企业虚开专票被查，追缴并处罚款 2249.75 万元</div>
+          <div class="muted" style="margin-top:4px">案例 · 稽查处罚 · 收藏于 2026-07-30</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="dyn" style="border:none;padding:8px 0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">跨年取得的发票能否在当年税前扣除？— 张老师解读</div>
+          <div class="muted" style="margin-top:4px">问答 · 收藏于 2026-09-08 · <span style="color:var(--primary);cursor:pointer" onclick="openChat()">继续问 ›</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="dyn" style="border:none;padding:8px 0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">企业所得税汇算清缴申报表填写 SOP（模板）</div>
+          <div class="muted" style="margin-top:4px">模板 · 收藏于 2026-08-15</div>
+        </div>
+      </div>
+    </div>
+    <div id="collectLive" style="font-size:12px;color:var(--primary);line-height:1.9;padding:12px 2px"></div>
+  </div>
+
+  <!-- ========== 积分明细 ========== -->
+  <div class="screen" id="points">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <span style="font-size:22px;cursor:pointer;color:var(--primary)" onclick="goTab('me')">‹</span>
+      <span style="font-size:16px;font-weight:700;color:var(--primary)">积分明细</span>
+    </div>
+    <div class="me-head" style="margin-bottom:10px">
+      <div class="coinrow">
+        <div class="cbx"><b id="ptBalance">32</b><span>当前积分</span></div>
+        <div class="cbx"><b id="ptToday">+5</b><span>今日获取</span></div>
+        <div class="cbx"><b id="ptTotal">210</b><span>累计获取</span></div>
+      </div>
+    </div>
+    <div class="muted" style="padding:0 4px 8px;line-height:1.6">积分与人民币 1:1 等值，可抵专家服务费；积分设滚动有效期，长期不消费将到期清零。</div>
+    <div class="sec-title" style="margin-top:2px">获取与消耗 <span class="more">最近 30 天</span></div>
+    <div class="card">
+      <div class="dyn" style="border:none;padding:9px 0"><span class="av" style="background:var(--ai);color:var(--primary)">📅</span><span class="txt" style="flex:1">每日签到</span><span style="color:var(--ok);font-weight:700">+5</span><span style="color:var(--sub);font-size:11px;margin-left:8px">09-10</span></div>
+      <div class="dyn" style="border:none;padding:9px 0"><span class="av" style="background:var(--ai);color:var(--primary)">👥</span><span class="txt" style="flex:1">邀请好友注册（王会计）</span><span style="color:var(--ok);font-weight:700">+20</span><span style="color:var(--sub);font-size:11px;margin-left:8px">09-09</span></div>
+      <div class="dyn" style="border:none;padding:9px 0"><span class="av" style="background:#FCEFDD;color:var(--warn)">💬</span><span class="txt" style="flex:1">人工快答：跨年发票扣除</span><span style="color:var(--warn);font-weight:700">-30</span><span style="color:var(--sub);font-size:11px;margin-left:8px">09-08</span></div>
+      <div class="dyn" style="border:none;padding:9px 0"><span class="av" style="background:var(--ai);color:var(--primary)">📅</span><span class="txt" style="flex:1">每日签到</span><span style="color:var(--ok);font-weight:700">+5</span><span style="color:var(--sub);font-size:11px;margin-left:8px">09-08</span></div>
+      <div class="dyn" style="border:none;padding:9px 0"><span class="av" style="background:#FCEFDD;color:var(--warn)">🤖</span><span class="txt" style="flex:1">AI 深度问答（带溯源）</span><span style="color:var(--warn);font-weight:700">-8</span><span style="color:var(--sub);font-size:11px;margin-left:8px">09-05</span></div>
+      <div class="dyn" style="border:none;padding:9px 0"><span class="av" style="background:var(--ai);color:var(--primary)">🎁</span><span class="txt" style="flex:1">注册赠送（30天有效期）</span><span style="color:var(--ok);font-weight:700">+50</span><span style="color:var(--sub);font-size:11px;margin-left:8px">09-01</span></div>
+    </div>
+    <div class="muted" style="text-align:center;padding:6px 0 16px;line-height:1.6">积分不可提现、不可转让、不可交易，仅限本平台消费。</div>
+    <div id="pointsLive" style="font-size:12px;color:var(--primary);line-height:1.9;padding:4px 2px"></div>
+  </div>
+
+  <!-- ========== 聊天覆盖层 ========== -->
+  <div class="chat" id="chat">
+    <div class="nav"><span class="back" onclick="closeChat()">‹</span><span>AI 智能答疑</span></div>
+    <div class="body">
+      <div class="msg u">小规模纳税人季度销售额30万以内，还免增值税吗？具体怎么算？</div>
+      <div class="msg a">免税。自2023-01-01起，小规模纳税人合计月销售额未超过10万元（按季30万元）的，免征增值税。<div class="src">
+        <div class="sh">📌 政策依据</div>
+        财政部 税务总局公告2023年第19号《关于明确增值税小规模纳税人减免政策的公告》第一条｜施行：2023-01-01｜状态：现行有效
+        <div class="meta">注：原2019年第4号第二条"月3万/季9万"标准已废止，本助手不会引用失效条款。</div>
+      </div><div style="margin-top:7px;font-size:11px;color:#9aa0a8;line-height:1.5">※ 以上为现行有效政策条文引用，实际操作仍以主管税务机关口径为准；如需正式意见可转人工答疑。</div></div>
+      <div class="msg u">那如果超过30万呢，全都按3%交吗？</div>
+      <div class="msg a">超过部分全额按3%征收（现行减按1%优惠期以最新公告为准）。若您想让专家结合您企业实际判定，可转人工快答（单点问题统一 30 积分）。<div style="margin-top:7px;padding-top:7px;border-top:1px solid #eef0f3;font-size:11px;color:#9aa0a8;line-height:1.5">⚠️ 本解读仅供参考，一切以税务机关最新口径为准，不作为正式税务意见；涉及您企业具体情形，请转人工答疑。</div></div>
+    </div>
+    <div class="human-bar">
+      <div class="btn" onclick="alert('已提交人工快答，扣 30 积分，张老师将在工作时间内答复')">转人工快答 · 30 积分</div>
+      <div class="note" style="color:var(--primary);font-weight:600;cursor:pointer" onclick="openKefu()">积分不足？点此联系客服获取积分 →</div>
+    </div>
+    <div class="input">
+      <div class="box" id="chatInput" contenteditable="true">输入您的问题…</div>
+      <div class="send" onclick="sendMsg()">发送</div>
+    </div>
+  </div>
+
+  <!-- ========== 底部 TabBar ========== -->
+  <div class="tabbar">
+    <div class="tab on" onclick="goTab('home')"><div class="ic">🏠</div>首页</div>
+    <div class="tab" onclick="goTab('policy')"><div class="ic">📚</div>政策库</div>
+    <div class="tab" onclick="goTab('case')"><div class="ic">⚠️</div>案例</div>
+    <div class="tab" onclick="goTab('expert')"><div class="ic">👤</div>专家</div>
+    <div class="tab" onclick="goTab('me')"><div class="ic">👛</div>我的</div>
+  </div>
+</div>
+
+<script>
+  const API=''; const OPENID='demo-user-zhang';
+  const $=(id)=>document.getElementById(id);
+  function apiGet(p){return fetch(API+'/api/'+p).then(r=>r.json()).catch(()=>({ok:false}));}
+  function apiPost(p,b){return fetch(API+'/api/'+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json()).catch(()=>({ok:false,msg:'网络异常'}));}
+  function setTxt(id,v){const e=$(id);if(e)e.textContent=v;}
+  function cnLevel(l){return ({free:'免费版',monthly:'月卡会员',yearly:'年卡会员',enterprise:'企业版'}[l]||'免费版');}
+  async function loadState(){
+    try{const s=await apiGet('state?openid='+OPENID);
+      if(s.ok){setTxt('homePoints',s.balance);setTxt('mePoints',s.balance);setTxt('meInvites',s.invite_count);setTxt('meLevel',cnLevel(s.level));setTxt('ptBalance',s.balance);setTxt('ptToday','+'+s.today_earn);setTxt('ptTotal',s.total_earn);setTxt('invCode',s.invite_code);}
+    }catch(e){}
+  }
+  function scrollChat(){const b=$('chat').querySelector('.body');b.scrollTop=b.scrollHeight;}
+  function addMsg(who,html){const d=document.createElement('div');d.className='msg '+(who==='u'?'u':'a');d.innerHTML=html;$('chat').querySelector('.body').appendChild(d);scrollChat();}
+  async function sendMsg(){
+    const box=$('chatInput');const q=(box.textContent||'').trim();if(!q)return;
+    addMsg('u',q);box.textContent='';
+    try{const r=await apiPost('ask',{openid:OPENID,question:q,type:'ai_deep'});
+      if(r.ok){renderAI(r.answer,r.policy_refs,r.mode);loadState();}
+      else addMsg('a','⚠️ '+r.msg+'（余额'+(r.balance||0)+'，点下方“联系客服”获取积分）');
+    }catch(e){addMsg('a','网络异常，请稍后重试');}
+  }
+  function renderAI(answer,refs,mode){
+    const lines=(answer||'').split('\n');
+    const dis=lines.filter(l=>/^[※⚠️]/.test(l.trim())).join(' ');
+    const body=lines.filter(l=>!/^[※⚠️]/.test(l.trim())).join('<br>');
+    const badge = mode==='deep_llm'
+      ? '<div style="margin:6px 0 2px;font-size:11px;color:#165D9C;font-weight:600">🤖 大模型深度解读（RAG+LLM）</div>'
+      : '<div style="margin:6px 0 2px;font-size:11px;color:#9aa0a8">📋 规则引擎检索</div>';
+    let h='<div class="msg a">'+badge+body;
+    if(refs&&refs.length){h+='<div class="src"><div class="sh">📌 政策依据</div>'+refs.join('｜')+'<div class="meta">本助手只引用现行有效政策，失效条款不参与生成。</div></div>';}
+    if(dis){h+='<div style="margin-top:7px;font-size:11px;color:#9aa0a8;line-height:1.5">'+dis+'</div>';}
+    h+='</div>';$('chat').querySelector('.body').insertAdjacentHTML('beforeend',h);scrollChat();
+  }
+  window.addEventListener('load',loadState);
+  const tabs={home:'慧根堂·财税AI智库',policy:'政策库',case:'稽查案例库',expert:'专家 · 悬赏',me:'我的'};
+  function goTab(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    if(id==='detail'){document.getElementById('detail').classList.add('active');}
+    else{document.getElementById(id).classList.add('active');}
+    document.getElementById('navTitle').textContent=tabs[id]||'慧根堂·财税AI智库';
+    document.querySelectorAll('.tabbar .tab').forEach(t=>t.classList.remove('on'));
+    const map={home:0,policy:1,case:2,expert:3,me:4};
+    if(map[id]!==undefined)document.querySelectorAll('.tabbar .tab')[map[id]].classList.add('on');
+    if(id!=='detail')document.getElementById(id).scrollTop=0;
+  }
+  function openDetail(){goTab('detail');document.getElementById('navTitle').textContent='政策详情 · 时效标注';}
+  function openChat(){document.getElementById('chat').classList.add('show');}
+  function openMyPosts(){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('myposts').classList.add('active');
+    document.getElementById('navTitle').textContent='我的问题';
+    document.getElementById('myposts').scrollTop=0;
+    apiGet('my/questions?openid='+OPENID).then(r=>{if(r.ok&&r.questions){const el=$('postsLive');if(el)el.innerHTML=r.questions.slice(0,8).map(q=>'· '+q.question+' <span style="color:#9aa0a8">['+({ai:'AI',human:'人工'}[q.answer_type]||q.answer_type)+' '+(-q.cost_points)+'分/'+(q.status==='l3'?'L3':q.status)+']</span>').join('<br>');}});
+  }
+  function openMyCollect(){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('mycollect').classList.add('active');
+    document.getElementById('navTitle').textContent='我的收藏';
+    document.getElementById('mycollect').scrollTop=0;
+    apiGet('my/collections?openid='+OPENID).then(r=>{if(r.ok&&r.collections){const el=$('collectLive');if(el)el.innerHTML='<div style="margin:6px 0 4px;color:var(--primary);font-weight:600">🔄 实时收藏（'+r.collections.length+'）</div>'+r.collections.map(c=>'· ['+c.collect_type+'] '+c.ref_id+' <span style="color:#9aa0a8">'+c.snapshot_status+'</span>').join('<br>');}});
+  }
+  function openPoints(){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('points').classList.add('active');
+    document.getElementById('navTitle').textContent='积分明细';
+    document.getElementById('points').scrollTop=0;
+    apiGet('points/ledger?openid='+OPENID).then(r=>{if(r.ok&&r.ledger){const el=$('pointsLive');if(el)el.innerHTML='<div style="margin:6px 0 4px;color:var(--primary);font-weight:600">🔄 实时流水</div>'+r.ledger.slice(0,10).map(x=>{const d=(x.created_at||'').slice(5,10);const sign=x.txn_type==='earn'?'+':'-';const col=x.txn_type==='earn'?'var(--ok)':'var(--warn)';return '<div class="dyn" style="border:none;padding:7px 0"><span class="av" style="background:var(--ai);color:var(--primary)">'+x.reason.slice(0,1)+'</span><span class="txt" style="flex:1">'+x.reason+'</span><span style="color:'+col+';font-weight:700">'+sign+x.amount+'</span><span style="color:var(--sub);font-size:11px;margin-left:8px">'+d+'</span></div>';}).join('');}});
+  }
+  function openKefu(){
+    alert('【企业微信客服会话 · 私域内可明示价格】\n\n您好～积分按 1:1 兑换：100积分 = 100元。\n可用于：人工快答 30积分/次(≈¥30)、深度咨询抵扣等。\n\n在企微把法币转给张老师后，由运营在后台「确认充值」，积分实时到账。\n（小程序页面内不写价格、不碰法币，合规）');
+    if(confirm('（演示）模拟运营已在企微确认收到您的转账，确认充值 100 积分到账？')){
+      (async()=>{const r=await apiPost('admin/recharge-confirm',{openid:OPENID,amount:100,ref:'wecom-demo'});if(r.ok){alert('充值成功，当前 '+r.balance+' 积分');loadState();}else alert(r.msg);})();
+    }
+  }
+  function closeChat(){document.getElementById('chat').classList.remove('show');}
+  // 政策库标签点击
+  document.querySelectorAll('#policy .chip').forEach(c=>c.onclick=()=>{
+    document.querySelectorAll('#policy .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');});
+  // 案例标签
+  document.querySelectorAll('#case .chip').forEach(c=>c.onclick=()=>{
+    document.querySelectorAll('#case .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');});
+  document.querySelectorAll('#myposts .chip').forEach(c=>c.onclick=()=>{
+    document.querySelectorAll('#myposts .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');});
+  document.querySelectorAll('#mycollect .chip').forEach(c=>c.onclick=()=>{
+    document.querySelectorAll('#mycollect .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');});
+</script>
+</body>
+</html>

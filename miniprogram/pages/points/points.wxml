@@ -1,0 +1,37 @@
+<view class="container">
+  <view class="card big-balance">
+    <view class="text2">当前积分</view>
+    <view class="b-num">{{balance}}</view>
+    <view class="text2">会员等级 L{{level}}</view>
+  </view>
+
+  <view class="card stat-grid">
+    <view class="stat">
+      <view class="stat-num">{{todayEarn}}</view>
+      <view class="text2">今日获取</view>
+    </view>
+    <view class="stat">
+      <view class="stat-num">{{totalEarn}}</view>
+      <view class="text2">累计获取</view>
+    </view>
+    <view class="stat">
+      <view class="stat-num">{{inviteCount}}</view>
+      <view class="text2">邀请人数</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="row between">
+      <view>
+        <view class="text2">我的邀请码</view>
+        <view class="invite-code">{{inviteCode || '—'}}</view>
+      </view>
+      <view class="btn small" bindtap="onCopyInvite">复制</view>
+    </view>
+  </view>
+
+  <view class="card get-card" bindtap="onGetPoints">
+    <view class="blue">💡 如何获取更多积分？</view>
+    <view class="text2 get-tip">邀请好友 / 法币充值，点击联系客服 ›</view>
+  </view>
+</view>

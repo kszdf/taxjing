@@ -1,0 +1,42 @@
+.policy { border-left: 6rpx solid #388bfd; }
+.p-title {
+  font-size: 30rpx;
+  color: #e6edf3;
+  font-weight: bold;
+  flex: 1;
+  margin-right: 16rpx;
+}
+.p-meta { margin-top: 10rpx; font-size: 24rpx; }
+.tag {
+  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  white-space: nowrap;
+}
+.tag-green { background: rgba(63,185,80,0.15); color: #3fb950; }
+.tag-red { background: rgba(229,72,77,0.15); color: #e5484d; }
+.tag-yellow { background: rgba(210,153,34,0.15); color: #d29922; }
+.tag-blue { background: rgba(56,139,253,0.15); color: #388bfd; }
+
+.searchbar { display: flex; align-items: center; }
+.search-input {
+  flex: 1;
+  background: #0f1419;
+  border: 2rpx solid #2a3645;
+  border-radius: 12rpx;
+  color: #e6edf3;
+  font-size: 26rpx;
+  padding: 14rpx 20rpx;
+  height: 44rpx;
+}
+.ph { color: #8b98a5; }
+.search-btn {
+  margin-left: 14rpx;
+  background: #388bfd;
+  color: #ffffff;
+  font-size: 26rpx;
+  padding: 16rpx 28rpx;
+  border-radius: 12rpx;
+}
+.search-clear { margin-left: 12rpx; color: #8b98a5; font-size: 24rpx; }
+.p-src { margin-top: 12rpx; color: #388bfd; font-size: 24rpx; }

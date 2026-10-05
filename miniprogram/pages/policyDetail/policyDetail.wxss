@@ -1,0 +1,15 @@
+.head { border-bottom: 4rpx solid #388bfd; }
+.d-title { font-size: 34rpx; font-weight: bold; color: #e6edf3; }
+.d-meta { margin-top: 12rpx; font-size: 24rpx; }
+.c-no { font-size: 28rpx; color: #388bfd; font-weight: bold; }
+.c-content { margin-top: 14rpx; line-height: 1.7; color: #e6edf3; white-space: pre-wrap; }
+.c-invalid { color: #e5484d; }
+.c-extra { margin-top: 12rpx; font-size: 24rpx; }
+.tag {
+  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  white-space: nowrap;
+}
+.tag-green { background: rgba(63,185,80,0.15); color: #3fb950; }
+.tag-red { background: rgba(229,72,77,0.15); color: #e5484d; }

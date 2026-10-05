@@ -1,0 +1,36 @@
+.wrap { padding: 24rpx; min-height: 100vh; background: #0f1419; }
+.title { font-size: 38rpx; font-weight: 600; color: #e6edf3; margin-bottom: 8rpx; }
+.sub { font-size: 24rpx; color: #8b98a5; margin-bottom: 24rpx; line-height: 1.6; }
+.field { display: flex; align-items: center; margin-bottom: 18rpx; background: #1a2330; border-radius: 12rpx; padding: 0 20rpx; }
+.field text { width: 120rpx; color: #8b98a5; font-size: 26rpx; }
+.field input { flex: 1; color: #e6edf3; height: 84rpx; font-size: 28rpx; }
+.btn { background: #388bfd; color: #fff; border-radius: 12rpx; font-size: 28rpx; margin-top: 12rpx; }
+.btn.ghost { background: #0d1117; color: #388bfd; border: 1rpx solid #388bfd; }
+.btn.primary { background: #388bfd; }
+
+.head { display: flex; justify-content: space-between; align-items: center; padding: 12rpx 8rpx 20rpx; }
+.org { font-size: 34rpx; font-weight: 600; color: #e6edf3; }
+.role { font-size: 24rpx; color: #8b98a5; margin-top: 6rpx; }
+.logout { color: #ff7b72; font-size: 26rpx; padding: 8rpx 20rpx; border: 1rpx solid #ff7b72; border-radius: 10rpx; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 12rpx; margin-bottom: 20rpx; }
+.tab { padding: 12rpx 22rpx; border-radius: 10rpx; background: #1a2330; color: #8b98a5; font-size: 26rpx; }
+.tab.on { background: #388bfd; color: #fff; }
+
+.pane { }
+.card { background: #1a2330; border-radius: 12rpx; padding: 20rpx 24rpx; margin-bottom: 16rpx; display: flex; justify-content: space-between; align-items: center; }
+.card .k { color: #8b98a5; font-size: 26rpx; }
+.card .v { color: #e6edf3; font-size: 28rpx; font-weight: 600; }
+
+.list { margin-bottom: 20rpx; }
+.item { background: #1a2330; border-radius: 12rpx; padding: 18rpx 22rpx; margin-bottom: 12rpx; }
+.it-name { color: #e6edf3; font-size: 28rpx; }
+.it-meta { color: #8b98a5; font-size: 22rpx; margin-top: 8rpx; }
+.empty { color: #8b98a5; font-size: 26rpx; text-align: center; padding: 30rpx; }
+
+.form { background: #1a2330; border-radius: 12rpx; padding: 20rpx; }
+.form input, .form textarea { background: #0d1117; border-radius: 10rpx; color: #e6edf3; padding: 18rpx; margin-bottom: 14rpx; font-size: 28rpx; width: auto; }
+.form textarea { height: 140rpx; }
+.picker { background: #0d1117; border-radius: 10rpx; color: #e6edf3; padding: 18rpx; margin-bottom: 14rpx; font-size: 28rpx; }
+.divider { color: #8b98a5; font-size: 24rpx; text-align: center; margin: 16rpx 0; }
+.answer { background: #0d1117; border-radius: 12rpx; padding: 20rpx; color: #e6edf3; font-size: 26rpx; margin-top: 16rpx; line-height: 1.6; word-break: break-all; }

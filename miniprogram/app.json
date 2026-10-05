@@ -1,0 +1,40 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/ask/ask",
+    "pages/policy/policy",
+    "pages/policyDetail/policyDetail",
+    "pages/points/points",
+    "pages/kefu/kefu",
+    "pages/human/human",
+    "pages/profile/profile",
+    "pages/community/list",
+    "pages/community/detail",
+    "pages/calendar/calendar",
+    "pages/org/org"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#0f1419",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "税镜 · 财税AI工作台",
+    "backgroundColor": "#0f1419"
+  },
+  "tabBar": {
+    "color": "#8b98a5",
+    "selectedColor": "#388bfd",
+    "backgroundColor": "#1a2330",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "对话"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

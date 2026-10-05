@@ -1,0 +1,25 @@
+<view class="container">
+  <view class="card" wx:if="{{loading}}">
+    <view class="text2">客服信息加载中…</view>
+  </view>
+
+  <block wx:else>
+    <view class="card">
+      <view class="kf-title">💬 联系客服</view>
+      <view class="kf-tip text2">{{tip || '如需购买积分或咨询业务，请联系客服。'}}</view>
+    </view>
+
+    <view class="card" wx:if="{{qrcodeUrl}}">
+      <image class="qrcode" src="{{qrcodeUrl}}" mode="aspectFit"></image>
+      <view class="text2 center">长按识别二维码添加客服</view>
+    </view>
+
+    <view class="card">
+      <view class="row">
+        <view class="btn" bindtap="onCopyWechat">复制客服微信</view>
+        <view class="btn ghost" bindtap="onOpenSession">打开会话</view>
+      </view>
+      <view class="btn recharge" bindtap="onRecharge">法币充值流程</view>
+    </view>
+  </block>
+</view>

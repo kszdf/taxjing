@@ -1,0 +1,26 @@
+.input {
+  width: 100%;
+  min-height: 180rpx;
+  background: #0f1419;
+  border: 1rpx solid #2a3645;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  box-sizing: border-box;
+  color: #e6edf3;
+  font-size: 28rpx;
+}
+.ph { color: #8b98a5; }
+.submit { margin-top: 20rpx; }
+.section-title { margin: 16rpx 8rpx; }
+.t-id { font-size: 24rpx; }
+.t-q { margin-top: 14rpx; line-height: 1.7; color: #e6edf3; white-space: pre-wrap; }
+.t-a { margin-top: 14rpx; line-height: 1.7; color: #3fb950; white-space: pre-wrap; }
+.t-time { margin-top: 12rpx; font-size: 22rpx; }
+.tag {
+  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  white-space: nowrap;
+}
+.tag-green { background: rgba(63,185,80,0.15); color: #3fb950; }
+.tag-yellow { background: rgba(210,153,34,0.15); color: #d29922; }

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>税镜 · L2 依据库升级报告（2026-09-12）</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --line:#e5e5e5; --bg:#fafaf8; --card:#fff;
+          --good:#0f6e56; --goodbg:#e1f5ee; --warn:#854f0b; --warnbg:#faeeda;
+          --bad:#a32d2d; --badbg:#fcebeb; --blue:#185fa5; --bluebg:#e6f1fb; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:48px 24px; background:var(--bg); color:var(--ink);
+         font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+         line-height:1.75; font-size:15px; }
+  .wrap { max-width:860px; margin:0 auto; }
+  h1 { font-size:26px; font-weight:500; margin:0 0 6px; letter-spacing:-.01em; }
+  .sub { color:var(--muted); font-size:14px; margin-bottom:36px; }
+  h2 { font-size:18px; font-weight:500; margin:44px 0 14px; padding-bottom:8px;
+       border-bottom:1px solid var(--line); }
+  p { margin:10px 0; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(178px,1fr)); gap:12px; margin:22px 0 8px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
+  .kpi .lbl { font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .kpi .num { font-size:26px; font-weight:500; letter-spacing:-.02em; }
+  .kpi .delta { font-size:13px; color:var(--good); margin-top:6px; }
+  table { width:100%; border-collapse:collapse; margin:16px 0; font-size:14px;
+          background:var(--card); border-radius:12px; overflow:hidden; }
+  th { text-align:left; font-weight:500; font-size:13px; color:var(--muted);
+       padding:12px 16px; border-bottom:1px solid var(--line); background:#f6f6f4; }
+  td { padding:12px 16px; border-bottom:1px solid var(--line); }
+  tr:last-child td { border-bottom:none; }
+  td.n { font-variant-numeric:tabular-nums; }
+  .up { color:var(--good); font-weight:500; }
+  .box { background:var(--card); border:1px solid var(--line); border-left:3px solid var(--bad);
+         border-radius:8px; padding:16px 20px; margin:18px 0; }
+  .box.good { border-left-color:var(--good); }
+  .box.warn { border-left-color:var(--warn); }
+  code { background:#f0efec; padding:2px 6px; border-radius:4px;
+         font-family:ui-monospace,Consolas,monospace; font-size:13px; }
+  pre { background:#f6f6f4; border:1px solid var(--line); border-radius:8px;
+        padding:14px 16px; overflow-x:auto; font-size:13px; line-height:1.65;
+        font-family:ui-monospace,Consolas,monospace; white-space:pre-wrap; }
+  ol,ul { padding-left:22px; margin:10px 0; }
+  li { margin:6px 0; }
+  .tag { display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px;
+         background:var(--bluebg); color:var(--blue); margin-right:6px; }
+  .foot { margin-top:48px; padding-top:18px; border-top:1px solid var(--line);
+          color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>税镜 · L2 依据库升级报告</h1>
+  <div class="sub">2026-09-12 &nbsp;·&nbsp; 从「搜得到」到「引得了」 &nbsp;·&nbsp; 本地 + 生产均已生效</div>
+
+  <h2>一句话结论</h2>
+  <p>把官网政策法规库里<strong>官方明示现行有效</strong>的文件从「仅目录」升级为「可引用依据」，
+     可引用政策由 <strong>269 条增至 1039 条</strong>，可引用条款由 <strong>2307 条增至 17587 条</strong>。
+     此前《增值税法》《会计法》《关税法》《刑法》这些根本大法竟然都只是「搜得到、引不了」。</p>
+
+  <div class="kpis">
+    <div class="kpi"><div class="lbl">可引用政策（生产）</div><div class="num">1039</div>
+      <div class="delta">↑ 从 269 起，3.9 倍</div></div>
+    <div class="kpi"><div class="lbl">可引用条款（生产）</div><div class="num">17,587</div>
+      <div class="delta">↑ 从 2307 起，7.6 倍</div></div>
+    <div class="kpi"><div class="lbl">自动放行</div><div class="num">772</div>
+      <div class="delta">零人工复核</div></div>
+    <div class="kpi"><div class="lbl">官网目录总量</div><div class="num">4921</div>
+      <div class="delta">仍保留为可检索目录</div></div>
+  </div>
+
+  <h2>语料三层：现在的样子</h2>
+  <table>
+    <tr><th>层</th><th>含义</th><th class="n">条数</th><th>能否对客引用</th></tr>
+    <tr><td><strong>L1 目录索引</strong></td><td>只有元数据与官方链接</td><td class="n">2447</td><td>否（只作检索线索）</td></tr>
+    <tr><td><strong>L2 依据库</strong></td><td>有正文条款、已过时效校验</td><td class="n up">1039</td><td><strong>是</strong></td></tr>
+    <tr><td><strong>已失效 / 废止</strong></td><td>被时效护栏屏蔽</td><td class="n">1051</td><td>否（进图谱不进答案）</td></tr>
+    <tr><td><strong>待复核</strong></td><td>官方标「已修改」或早于阈值</td><td class="n">384</td><td>否（等人判断）</td></tr>
+  </table>
+
+  <h2>关键设计：零人工的自动复核</h2>
+  <p>原有升级通道把抓到的正文<strong>一律丢进「待人工复核」</strong>——那等于没升级。
+     本轮加入合取式自动放行，<strong>六项全满足才直接生效</strong>，任一不满足即转人工（宁慢勿错）：</p>
+  <ol>
+    <li>时效可靠：官方标注现行有效，<em>或</em>无时效字段但发布日在阈值之后</li>
+    <li>正文完整：≥80 字、切得出条款、无过短残条</li>
+    <li>文号不在官方《失效废止目录》公告附件清单（997 条）内</li>
+    <li>未被其他文件明令废止（库内废止关系）</li>
+    <li>不落入 2026年第10号第六条「批量停止执行」范围</li>
+    <li>施行日已到（未生效的绝不进入依据）</li>
+  </ol>
+  <p>实测印证了第 5 条的必要：2023 年那一批「延续实施……增值税优惠政策」的公告，
+     确已被 2026年第10号批量停止执行，被准确拦下。</p>
+
+  <div class="box">
+    <p style="margin:0 0 10px"><strong>修掉一处会害人的语义反转</strong></p>
+    <p style="margin:0 0 10px">失效回扫把 2026年第10号第六条读反了。原文是：</p>
+    <pre>除本公告和增值税法、增值税法实施条例、《财政部 税务总局关于个人销售
+住房增值税政策的公告》（2025年第17号）外，在2025年12月31日前制发文件
+规定的国内环节增值税优惠政策同时停止执行。</pre>
+    <p style="margin:0">「<strong>除……外</strong>」是<strong>例外保留</strong>结构，2025年第17号 是被明确<strong>保留</strong>的。
+       原正则只抓「《XX》（文号）……同时停止执行」，把「保留」读成了「废止」。
+       修复后该条从影响检索的清单中消失；实测提问「个人销售住房增值税政策」能正确引用到 <strong>2025年第17号</strong>。</p>
+  </div>
+
+  <h2>检索验证（7 个用例，全部精确命中）</h2>
+  <table>
+    <tr><th>提问</th><th>首位引用</th></tr>
+    <tr><td>小规模纳税人增值税起征点</td><td>财政部 税务总局公告2026年第10号、国家税务总局公告2026年第4号、<span class="tag">新</span>增值税法</td></tr>
+    <tr><td>个人销售住房增值税政策</td><td>财政部 税务总局公告2025年第17号（修复后正确保留）</td></tr>
+    <tr><td>企业所得税年度申报表用哪版</td><td>2025年第1号（新修订）等</td></tr>
+    <tr><td>虚开增值税专用发票的刑事责任</td><td><span class="tag">新</span>中华人民共和国刑法 第 205 条</td></tr>
+    <tr><td>会计法对单位负责人的要求</td><td><span class="tag">新</span>中华人民共和国会计法（52 条）</td></tr>
+    <tr><td>关税法规定的纳税期限</td><td><span class="tag">新</span>中华人民共和国关税法（73 条）</td></tr>
+    <tr><td>个人所得税汇算清缴期限</td><td>国家税务总局公告2023年第3号 等</td></tr>
+  </table>
+
+  <h2>同时修掉的两处结构性缺口</h2>
+  <ul>
+    <li><strong>条款级部分废止的政策压根没进检索引擎</strong>：加载逻辑只读 <code>active</code>，
+        漏掉了 <code>partially_invalid</code>（某条被废止、其余仍有效）。已修正。</li>
+    <li><strong>后台一键复核缺「废止来源」校验</strong>：官方时效字段会滞后，
+        单看它会把已失效文件放行。已补上官方废止目录 + 库内废止关系两道关。</li>
+  </ul>
+
+  <div class="box warn">
+    <p style="margin:0 0 10px"><strong>没有放行、也确实不该放行的部分</strong></p>
+    <p style="margin:0">384 条待复核中，主要是官方标「<strong>已修改</strong>」的文件。抽查发现：
+       官网详情页展示的<strong>仍是原文，并不含修订后的条文</strong>。直接入库会让从业者引到过期条款，
+       因此一律留在待复核，不做自动放行。</p>
+  </div>
+
+  <h2>下一步（建议优先级）</h2>
+  <ol>
+    <li><strong>补「废止后真空」主题</strong>：红字发票、成品油消费税等被标失效后，替代件尚未入库，
+        现在问这些主题会答「所给原文未涉及」。</li>
+    <li><strong>附件型政策</strong>：约 62 条政策正文只有百来字，实质内容在 <code>.doc/.xls</code> 附件里
+        （已有零依赖解析器可复用）。</li>
+    <li><strong>让依据库自动生长</strong>：把这次的三段升级做成每周定时任务，
+        新出现的现行有效政策自动长成依据——不过这需要你点头，会占用一点服务器负载。</li>
+    <li>上线手续：微信 request 合法域名、正式 AppID、运营口令强随机。</li>
+  </ol>
+
+  <div class="foot">
+    数据来源：国家税务总局政策法规库 fgk.chinatax.gov.cn（正文一律官方原文照录）。<br>
+    生产环境：tax.hgtcs.com · 全量升格后已重启服务，三个在跑站点均正常（200）。<br>
+    库内同时记录 459 条废止关系，用于「新优于旧」裁决与条款级置灰。
+  </div>
+
+</div>
+</body>
+</html>

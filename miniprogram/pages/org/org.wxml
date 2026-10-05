@@ -1,0 +1,134 @@
+<view class="wrap">
+  <!-- 未登录：机构登录（绑定微信 openid，打通统一账号）-->
+  <view wx:if="{{!token}}" class="login">
+    <view class="title">机构工作台登录</view>
+    <view class="sub">用机构码 + 登录名 + 口令登录；本机微信身份将绑定到该机构席位（一个账号、双端可用）</view>
+    <view class="field"><text>机构码</text><input value="{{lgCode}}" data-f="Code" bindinput="onLgInput" placeholder="如 ORGDEMO"/></view>
+    <view class="field"><text>登录名</text><input value="{{lgLogin}}" data-f="Login" bindinput="onLgInput" placeholder="如 owner"/></view>
+    <view class="field"><text>口令</text><input value="{{lgPwd}}" data-f="Pwd" bindinput="onLgInput" placeholder="口令" password="true"/></view>
+    <button class="btn primary" bindtap="doLogin">登录机构端</button>
+  </view>
+
+  <!-- 已登录 -->
+  <block wx:else>
+    <view class="head">
+      <view>
+        <view class="org">{{orgInfo.org_name}}</view>
+        <view class="role">{{orgInfo.org_code}} ｜ {{role === 'owner' ? '负责人' : (role === 'admin' ? '管理员' : '成员')}}</view>
+      </view>
+      <view class="logout" bindtap="doLogout">退出</view>
+    </view>
+
+    <view class="tabs">
+      <view wx:for="{{tabs}}" wx:key="key" class="tab {{tab === item.key ? 'on' : ''}}" data-key="{{item.key}}" bindtap="onTabTap">{{item.name}}</view>
+    </view>
+
+    <!-- 概览 -->
+    <view wx:if="{{tab === 'me'}}" class="pane">
+      <view class="card"><view class="k">机构</view><view class="v">{{me.org.name}}（{{me.org.plan}}）</view></view>
+      <view class="card"><view class="k">席位已用</view><view class="v">{{me.seat_used}} / {{me.org.seat_total}}</view></view>
+      <view class="card"><view class="k">客户数</view><view class="v">{{me.client_count}}</view></view>
+      <view class="card"><view class="k">有效口径</view><view class="v">{{me.answer_count}}</view></view>
+    </view>
+
+    <!-- 客户档案 -->
+    <view wx:elif="{{tab === 'clients'}}" class="pane">
+      <view class="list">
+        <view wx:for="{{clients}}" wx:key="id" class="item">
+          <view class="it-name">{{item.name}}</view>
+          <view class="it-meta">{{item.industry || '—'}} ｜ {{item.taxpayer_type || '—'}} ｜ 风险：{{item.risk_level || '—'}}</view>
+        </view>
+        <view wx:if="{{clients.length === 0}}" class="empty">暂无客户</view>
+      </view>
+      <view class="form">
+        <input placeholder="客户名称" data-f="cName" bindinput="onCInput" value="{{cName}}"/>
+        <input placeholder="统一信用代码" data-f="cCredit" bindinput="onCInput" value="{{cCredit}}"/>
+        <input placeholder="行业" data-f="cIndustry" bindinput="onCInput" value="{{cIndustry}}"/>
+        <input placeholder="地区" data-f="cRegion" bindinput="onCInput" value="{{cRegion}}"/>
+        <input placeholder="纳税人类型" data-f="cType" bindinput="onCInput" value="{{cType}}"/>
+        <button class="btn" bindtap="saveClient">新增客户</button>
+      </view>
+    </view>
+
+    <!-- 机构口径库 -->
+    <view wx:elif="{{tab === 'answers'}}" class="pane">
+      <view class="list">
+        <view wx:for="{{answers}}" wx:key="id" class="item">
+          <view class="it-name">{{item.question_pattern}}</view>
+          <view class="it-meta">{{item.category || '—'}} ｜ 状态：{{item.status === 'active' ? '已生效' : '草稿'}}</view>
+        </view>
+        <view wx:if="{{answers.length === 0}}" class="empty">暂无口径</view>
+      </view>
+      <view class="form">
+        <input placeholder="分类(如 注销/转股)" data-f="aCat" bindinput="onAInput" value="{{aCat}}"/>
+        <input placeholder="命中关键词(用逗号分隔)" data-f="aPattern" bindinput="onAInput" value="{{aPattern}}"/>
+        <textarea placeholder="标准答案(Markdown)" data-f="aMd" bindinput="onAInput" value="{{aMd}}"/>
+        <button class="btn" bindtap="saveAnswer">存为草稿(待审定)</button>
+        <view class="divider">— 沉淀社区精华 —</view>
+        <input placeholder="post_id" data-f="pPost" bindinput="onAInput" value="{{pPost}}" type="number"/>
+        <input placeholder="reply_id" data-f="pReply" bindinput="onAInput" value="{{pReply}}" type="number"/>
+        <button class="btn ghost" bindtap="promoteReply">沉淀为机构口径</button>
+      </view>
+    </view>
+
+    <!-- 团队问答 -->
+    <view wx:elif="{{tab === 'ask'}}" class="pane">
+      <view class="form">
+        <textarea placeholder="向本机构提问（命中口径即锁定统一回复）" data-f="askQ" bindinput="onAskInput" value="{{askQ}}"/>
+        <button class="btn primary" bindtap="askTeam">提问</button>
+      </view>
+      <view wx:if="{{askR}}" class="answer">{{askR}}</view>
+    </view>
+
+    <!-- 作业任务 -->
+    <view wx:elif="{{tab === 'tasks'}}" class="pane">
+      <view class="list">
+        <view wx:for="{{tasks}}" wx:key="id" class="item">
+          <view class="it-name">{{item.title}}</view>
+          <view class="it-meta">{{item.task_type || '—'}} ｜ 状态：{{item.status || '—'}}{{item.due ? ' ｜ 截止 ' + item.due : ''}}</view>
+        </view>
+        <view wx:if="{{tasks.length === 0}}" class="empty">暂无任务</view>
+      </view>
+      <view class="form">
+        <input placeholder="任务标题" data-f="tTitle" bindinput="onTInput" value="{{tTitle}}"/>
+        <picker mode="selector" range="{{selMembers}}" range-key="name" data-f="tAssignee" bindchange="onTSelect">
+          <view class="picker">执行成员：{{selMembers[tAssignee].name || '请选择'}}</view>
+        </picker>
+        <picker mode="selector" range="{{selClients}}" range-key="name" data-f="tClient" bindchange="onTSelect">
+          <view class="picker">关联客户：{{selClients[tClient].name || '请选择'}}</view>
+        </picker>
+        <input placeholder="截止日(如 2026-09-30)" data-f="tDue" bindinput="onTInput" value="{{tDue}}"/>
+        <input placeholder="类型(申报/风控/工商)" data-f="tType" bindinput="onTInput" value="{{tType}}"/>
+        <button class="btn" bindtap="createTask">下派任务</button>
+      </view>
+    </view>
+
+    <!-- 席位成员 -->
+    <view wx:elif="{{tab === 'members'}}" class="pane">
+      <view class="list">
+        <view wx:for="{{members}}" wx:key="id" class="item">
+          <view class="it-name">{{item.name}}（{{item.login_name}}）</view>
+          <view class="it-meta">{{item.role}} ｜ {{item.seat_status === 'active' ? '启用' : '停用'}}</view>
+        </view>
+      </view>
+      <view wx:if="{{role === 'owner' || role === 'admin'}}" class="form">
+        <input placeholder="登录名" data-f="mLogin" bindinput="onMInput" value="{{mLogin}}"/>
+        <input placeholder="姓名" data-f="mName" bindinput="onMInput" value="{{mName}}"/>
+        <input placeholder="角色(member/admin)" data-f="mRole" bindinput="onMInput" value="{{mRole}}"/>
+        <button class="btn" bindtap="inviteMember">邀请成员</button>
+      </view>
+    </view>
+
+    <!-- 风险扫描 -->
+    <view wx:elif="{{tab === 'risk'}}" class="pane">
+      <view class="list">
+        <view wx:for="{{riskRules}}" wx:key="code" class="item">
+          <view class="it-name">{{item.name}}</view>
+          <view class="it-meta">{{item.op}} {{item.threshold}}（{{item.level}}）</view>
+        </view>
+      </view>
+      <button class="btn primary" bindtap="batchRisk">批量扫描全部客户</button>
+      <view wx:if="{{riskResult}}" class="answer">{{riskResult}}</view>
+    </view>
+  </block>
+</view>

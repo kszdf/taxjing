@@ -1,0 +1,45 @@
+page {
+  background-color: #0f1419;
+  color: #e6edf3;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 28rpx;
+}
+
+.container {
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.card {
+  background-color: #1a2330;
+  border: 1rpx solid #2a3645;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-sizing: border-box;
+}
+
+.text2 { color: #8b98a5; }
+.blue { color: #388bfd; }
+.green { color: #3fb950; }
+.red { color: #e5484d; }
+.yellow { color: #d29922; }
+
+.row { display: flex; align-items: center; }
+.between { justify-content: space-between; }
+.center { text-align: center; }
+
+.btn {
+  background-color: #388bfd;
+  color: #ffffff;
+  border-radius: 12rpx;
+  text-align: center;
+  padding: 20rpx;
+  font-size: 28rpx;
+}
+
+.btn.ghost {
+  background-color: transparent;
+  border: 1rpx solid #2a3645;
+  color: #388bfd;
+}

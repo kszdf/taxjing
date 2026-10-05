@@ -1,0 +1,23 @@
+# 项目内部记忆（开发过程记录，不对外公开）
+.workbuddy/
+
+# 微信小程序私有配置（含 appid / 上传私钥，禁止外泄）
+miniprogram/project.private.config.json
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# 运行日志与临时文件
+logs/
+tmp/
+
+# 环境变量 / 密钥
+.env
+.env.local
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,23 @@
+<view class="container">
+  <view class="card head" wx:if="{{!loading}}">
+    <view class="d-title">{{title}}</view>
+    <view class="text2 d-meta">文号：{{docNumber}} · {{status === 'active' ? '生效中' : '已失效'}}</view>
+  </view>
+
+  <view class="card clause" wx:for="{{clauses}}" wx:key="no">
+    <view class="row between">
+      <view class="c-no">第 {{item.no}} 条</view>
+      <view class="tag {{item.status === 'active' ? 'tag-green' : 'tag-red'}}">
+        {{item.status === 'active' ? '生效' : '已失效/被废止'}}
+      </view>
+    </view>
+    <view class="c-content {{item.status === 'active' ? '' : 'c-invalid'}}">{{item.content}}</view>
+    <view class="c-extra text2" wx:if="{{item.status !== 'active'}}">
+      失效时间：{{item.invalid_since || '—'}} · 替代依据：{{item.superseded_by || '—'}}
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{loading}}">
+    <view class="text2">详情加载中…</view>
+  </view>
+</view>

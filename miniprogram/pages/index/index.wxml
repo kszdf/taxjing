@@ -1,0 +1,80 @@
+<view class="container">
+  <view class="topbar">
+    <view class="brand">
+      <text class="logo">镜</text>
+      <view class="brand-t">
+        <view class="bt1">税镜 · 财税AI工作台</view>
+        <view class="bt2">{{orgName ? '机构：' + orgName : '代账机构可复核依据引擎'}}</view>
+      </view>
+    </view>
+    <view class="top-r">
+      <text class="bal">{{balance}} 积分</text>
+      <text class="clear" wx:if="{{msgs.length > 0}}" bindtap="onClear">清空</text>
+    </view>
+  </view>
+
+  <scroll-view class="chat" scroll-y scroll-into-view="{{scrollInto}}" scroll-with-animation>
+    <view class="empty" wx:if="{{msgs.length === 0}}">
+      <view class="empty-t">💬 直接说，我来处理</view>
+      <view class="empty-s">政策依据、机构口径、客户风险、任务派发——一切基于对话展开。命中锁定口径的答案恒定一致，未命中的会进入沉淀闭环。</view>
+      <view class="chip" wx:for="{{capsules}}" wx:key="label" bindtap="onCapsule" data-q="{{item.q}}">{{item.emoji}} {{item.label}}</view>
+    </view>
+
+    <block wx:for="{{msgs}}" wx:key="index" wx:for-item="m" wx:for-index="idx">
+      <view class="msg {{m.role}}" id="m{{idx}}">
+        <!-- 我 -->
+        <view wx:if="{{m.role === 'me'}}" class="bubble me-b">{{m.text}}</view>
+        <!-- AI 卡片 -->
+        <view wx:else class="bubble ai-b">
+          <view class="badge-row">
+            <view wx:if="{{m.card.locked}}" class="badge locked">🔒 锁定口径 v{{m.card.version}}{{m.card.flag_review ? ' · 待复核' : ''}}</view>
+            <view wx:else class="badge ai">🤖 AI 生成 · 待沉淀</view>
+          </view>
+
+          <view class="answer">{{m.card.text}}</view>
+
+          <view class="ref-block" wx:if="{{m.card.refs.length > 0}}">
+            <view class="ref-title">📌 政策依据</view>
+            <view class="ref-item" wx:for="{{m.card.refs}}" wx:for-item="r" wx:key="*this">{{r}}</view>
+          </view>
+
+          <view class="skills" wx:if="{{m.skills.length > 0}}">🧠 本次调用：{{m.skills}}</view>
+
+          <view class="action" wx:if="{{m.action}}">
+            <button class="act-btn" size="mini" bindtap="onAction" data-type="{{m.action.type}}">
+              <text wx:if="{{m.action.type === 'open_community'}}">去同行问 ›</text>
+              <text wx:elif="{{m.action.type === 'open_calendar'}}">看征期日历 ›</text>
+              <text wx:elif="{{m.action.type === 'open_org_task'}}">去机构工作台派任务 ›</text>
+              <text wx:elif="{{m.action.type === 'open_org_client'}}">去客户体检 ›</text>
+              <text wx:else>查看 ›</text>
+            </button>
+          </view>
+
+          <view class="teach" wx:if="{{m.card.learnable && !m.teachSubmitted}}">
+            <button class="teach-btn" size="mini" bindtap="onTeach" data-idx="{{idx}}">📩 教我一下（沉淀为口径）</button>
+          </view>
+          <view class="teach-done" wx:if="{{m.teachSubmitted}}">✓ 已提交，待审定后锁定</view>
+
+          <view class="sug" wx:if="{{m.suggestions.length > 0}}">
+            <text class="sug-chip" wx:for="{{m.suggestions}}" wx:for-item="s" wx:key="label"
+                  bindtap="onSuggestion" data-intent="{{s.intent}}" data-idx="{{idx}}">{{s.label}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+    <view id="m{{msgs.length}}" style="height:2rpx;"></view>
+    <view style="height:20rpx;"></view>
+  </scroll-view>
+
+  <view class="capsules">
+    <view class="cap" wx:for="{{capsules}}" wx:key="label" bindtap="onCapsule" data-q="{{item.q}}">
+      <text class="cap-e">{{item.emoji}}</text><text class="cap-l">{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="inputbar">
+    <input class="q" placeholder="说点什么，或点上方胶囊…" placeholder-class="ph" value="{{question}}"
+      bindinput="onInput" confirm-type="send" bindconfirm="onSubmit" />
+    <button class="send" size="mini" loading="{{loading}}" bindtap="onSubmit">发送</button>
+  </view>
+</view>
